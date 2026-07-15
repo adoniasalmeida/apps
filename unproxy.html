@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>unproxy — decodificador de links</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0d12;
+    --panel: #10141c;
+    --panel-2: #141924;
+    --border: #1e2530;
+    --border-soft: #171d27;
+    --text: #e7edf5;
+    --muted: #7c8797;
+    --dim: #4b5563;
+    --amber: #ffb454;
+    --amber-dim: #7a5a2c;
+    --teal: #45d9c4;
+    --red: #ff6b6b;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --disp: 'Space Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,180,84,0.07), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(69,217,196,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--disp);
+    min-height:100vh;
+    padding:56px 20px 80px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:34px;}
+  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px 2px rgba(255,180,84,0.6);}
+  .brand span{font-family:var(--mono);font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);}
+
+  h1{
+    font-size:clamp(28px,4.2vw,38px);
+    font-weight:700;
+    letter-spacing:-0.02em;
+    margin:0 0 10px;
+    line-height:1.15;
+  }
+  h1 em{font-style:normal;color:var(--amber);}
+  .sub{
+    color:var(--muted);
+    font-size:15px;
+    line-height:1.6;
+    max-width:56ch;
+    margin:0 0 36px;
+  }
+  .sub code{
+    font-family:var(--mono);
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    padding:1px 6px;
+    border-radius:4px;
+    font-size:13px;
+    color:var(--teal);
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    position:relative;
+  }
+  .panel-label{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:12px;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .panel-label span.title{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--dim);
+  }
+  .label-actions{display:flex;gap:14px;align-items:center;}
+  .label-actions button{
+    background:none;border:none;color:var(--dim);
+    font-family:var(--mono);font-size:11px;cursor:pointer;
+    text-decoration:underline;text-underline-offset:3px;
+  }
+  .label-actions button:hover{color:var(--muted);}
+
+  textarea{
+    width:100%;
+    min-height:120px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:13px;
+    line-height:1.6;
+    padding:14px;
+    resize:vertical;
+    outline:none;
+  }
+  textarea::placeholder{color:var(--dim);}
+  textarea:focus{border-color:var(--amber-dim);}
+
+  .row{display:flex;gap:12px;margin-top:14px;align-items:center;flex-wrap:wrap;}
+
+  button.primary{
+    background:var(--amber);
+    color:#1a1206;
+    border:none;
+    font-family:var(--disp);
+    font-weight:600;
+    font-size:14px;
+    padding:11px 22px;
+    border-radius:9px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button.primary:hover{transform:translateY(-1px);box-shadow:0 4px 18px -4px rgba(255,180,84,0.45);}
+  button.primary:active{transform:translateY(0);}
+
+  button.ghost{
+    background:none;
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--disp);
+    font-weight:600;
+    font-size:13px;
+    padding:10px 18px;
+    border-radius:9px;
+    cursor:pointer;
+    transition:border-color .12s ease, color .12s ease;
+  }
+  button.ghost:hover{border-color:var(--teal);color:var(--teal);}
+
+  .hint{font-family:var(--mono);font-size:12px;color:var(--dim);}
+  .filename-tag{
+    font-family:var(--mono);font-size:11px;color:var(--teal);
+    background:#0f1f1c;border:1px solid #1c3530;
+    padding:3px 9px;border-radius:6px;
+  }
+
+  /* summary */
+  .summary{
+    margin-top:26px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .summary .count{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+  }
+  .summary .count b{color:var(--teal);font-weight:600;}
+  .export-row{display:flex;gap:10px;}
+
+  /* results */
+  .results{margin-top:16px;display:flex;flex-direction:column;gap:14px;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .card.ok{border-color:#22301f;}
+  .card.err{border-color:#301c1c;}
+
+  .card-row{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 16px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    line-height:1.5;
+    word-break:break-all;
+  }
+  .card-row + .card-row{border-top:1px solid var(--border-soft);}
+  .tag{
+    flex:0 0 auto;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:3px 7px;
+    border-radius:5px;
+    margin-top:1px;
+    font-family:var(--disp);
+    font-weight:600;
+  }
+  .tag.in{background:#1c2230;color:var(--muted);}
+  .tag.out{background:#1b2a26;color:var(--teal);}
+  .tag.fail{background:#2a1c1c;color:var(--red);}
+  .tag.meta{background:#20232b;color:var(--dim);}
+
+  .card-text{flex:1;color:var(--text);}
+  .card-text.dim{color:var(--muted);}
+  .card-text.out{color:var(--teal);}
+
+  .copy-btn{
+    flex:0 0 auto;
+    background:none;
+    border:1px solid var(--border);
+    color:var(--dim);
+    font-family:var(--disp);
+    font-size:11px;
+    padding:4px 9px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .copy-btn:hover{color:var(--text);border-color:var(--dim);}
+  .copy-btn.copied{color:var(--teal);border-color:var(--teal);}
+
+  .meta-line{
+    padding:8px 16px;
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--dim);
+    background:var(--panel-2);
+    border-bottom:1px solid var(--border-soft);
+    word-break:break-all;
+  }
+
+  .empty{
+    text-align:center;
+    color:var(--dim);
+    font-family:var(--mono);
+    font-size:12px;
+    padding:30px 0 0;
+  }
+
+  footer{
+    margin-top:50px;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--dim);
+    text-align:center;
+  }
+
+  input[type=file]{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand"><div class="dot"></div><span>frostview // ferramentas</span></div>
+
+  <h1>unproxy<em>.</em><br>revela o link real.</h1>
+  <p class="sub">
+    Cole URLs de proxy, ou carregue um arquivo <code>.txt</code>/<code>.m3u</code>/<code>.m3u8</code> inteiro.
+    A ferramenta decodifica em lote e deixa exportar de volta no mesmo formato, já com os links reais.
+  </p>
+
+  <div class="panel">
+    <div class="panel-label">
+      <span class="title">entrada</span>
+      <div class="label-actions">
+        <span class="filename-tag" id="filename-tag" style="display:none;"></span>
+        <button id="upload-btn">carregar arquivo</button>
+        <button id="sample-btn">usar exemplo</button>
+        <input type="file" id="file-input" accept=".txt,.m3u,.m3u8">
+      </div>
+    </div>
+    <textarea id="input" placeholder="https://seu-proxy.com/proxy/hls/aHR0cDovL2V4ZW1wbG8uY29tL2xpdmUvMTIzLm0zdTg.m3u8
+
+(uma URL por linha, ou cole uma lista .m3u inteira — linhas #EXTINF são preservadas)"></textarea>
+    <div class="row">
+      <button class="primary" id="decode-btn">decodificar em lote ↴</button>
+      <span class="hint">Ctrl/Cmd + Enter também funciona</span>
+    </div>
+  </div>
+
+  <div class="summary" id="summary" style="display:none;">
+    <span class="count" id="count-text"></span>
+    <div class="export-row">
+      <button class="ghost" id="export-m3u">baixar .m3u</button>
+      <button class="ghost" id="export-txt">baixar .txt</button>
+    </div>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <footer>tudo roda no seu navegador — nenhuma URL é enviada a servidor nenhum.</footer>
+</div>
+
+<script>
+const input = document.getElementById('input');
+const resultsEl = document.getElementById('results');
+const decodeBtn = document.getElementById('decode-btn');
+const sampleBtn = document.getElementById('sample-btn');
+const uploadBtn = document.getElementById('upload-btn');
+const fileInput = document.getElementById('file-input');
+const filenameTag = document.getElementById('filename-tag');
+const summaryEl = document.getElementById('summary');
+const countText = document.getElementById('count-text');
+const exportM3uBtn = document.getElementById('export-m3u');
+const exportTxtBtn = document.getElementById('export-txt');
+
+let currentFilename = 'decodificado';
+let lastLines = [];
+
+sampleBtn.addEventListener('click', () => {
+  currentFilename = 'decodificado';
+  filenameTag.style.display = 'none';
+  input.value = 'https://frostview.cloutteam.com/proxy/hls/aHR0cDovL2Nyc3RhcmxpdGUuc2hvcDo4MC9saXZlLzc1MjMzNjAyNC82OTY1MDI0MzcvNzg0NDQwLm0zdTg.m3u8';
+  runDecode();
+});
+
+uploadBtn.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    input.value = ev.target.result;
+    currentFilename = file.name.replace(/\.[^.]+$/, '') || 'decodificado';
+    filenameTag.textContent = file.name;
+    filenameTag.style.display = 'inline-block';
+    runDecode();
+  };
+  reader.readAsText(file);
+});
+
+decodeBtn.addEventListener('click', runDecode);
+input.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') runDecode();
+});
+
+function b64Decode(str){
+  let s = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s);
+  try {
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch(e){
+    return bin;
+  }
+}
+
+function looksLikeUrl(s){
+  return /^https?:\/\/[^\s]+$/i.test(s.trim());
+}
+
+function candidateSegments(raw){
+  const candidates = [];
+  const trimmed = raw.trim();
+
+  if (/^[A-Za-z0-9+/_=-]{16,}$/.test(trimmed) && !trimmed.includes('/proxy') && !trimmed.startsWith('http')) {
+    candidates.push(trimmed);
+  }
+
+  try {
+    const url = new URL(trimmed);
+    const segments = url.pathname.split('/').filter(Boolean);
+    const cleaned = segments
+      .map(seg => seg.replace(/\.[a-z0-9]{2,5}$/i, ''))
+      .filter(seg => seg.length >= 12)
+      .sort((a, b) => b.length - a.length);
+    candidates.push(...cleaned);
+  } catch(e) {
+    const matches = trimmed.match(/[A-Za-z0-9_-]{16,}/g) || [];
+    candidates.push(...matches.sort((a,b) => b.length - a.length));
+  }
+
+  return [...new Set(candidates)];
+}
+
+function decodeLine(raw){
+  const line = raw.trim();
+  if (!line) return null;
+
+  const candidates = candidateSegments(line);
+  for (const c of candidates){
+    try {
+      const decoded = b64Decode(c);
+      if (looksLikeUrl(decoded)){
+        return { input: line, output: decoded.trim(), ok: true };
+      }
+    } catch(e){ /* try next */ }
+  }
+  if (candidates.length){
+    try {
+      const decoded = b64Decode(candidates[0]);
+      if (decoded && decoded.length > 3){
+        return { input: line, output: decoded.trim(), ok: false, partial: true };
+      }
+    } catch(e){}
+  }
+  return { input: line, output: null, ok: false };
+}
+
+// splits input text into structured lines, preserving #EXTM3U / #EXTINF / blank lines untouched
+function processContent(text){
+  const rawLines = text.split(/\r?\n/);
+  return rawLines.map(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return { raw: line, type: 'blank' };
+    if (trimmed.startsWith('#')) return { raw: line, type: 'meta' };
+    const res = decodeLine(trimmed);
+    return {
+      raw: line,
+      type: 'url',
+      input: trimmed,
+      output: res ? res.output : null,
+      ok: res ? res.ok : false,
+      partial: res ? !!res.partial : false,
+    };
+  });
+}
+
+function runDecode(){
+  lastLines = processContent(input.value);
+  const urlLines = lastLines.filter(l => l.type === 'url');
+
+  resultsEl.innerHTML = '';
+
+  if (!urlLines.length){
+    summaryEl.style.display = 'none';
+    resultsEl.innerHTML = '<div class="empty">cole ou carregue ao menos uma URL.</div>';
+    return;
+  }
+
+  const ok = urlLines.filter(l => l.output && l.ok).length;
+  countText.innerHTML = `<b>${ok}</b> de ${urlLines.length} links decodificados com confiança`;
+  summaryEl.style.display = 'flex';
+
+  urlLines.forEach(res => resultsEl.appendChild(renderCard(res)));
+}
+
+function renderCard(res){
+  const card = document.createElement('div');
+  card.className = 'card ' + (res.output ? 'ok' : 'err');
+
+  const inRow = document.createElement('div');
+  inRow.className = 'card-row';
+  inRow.innerHTML = `<span class="tag in">entrada</span><span class="card-text dim">${escapeHtml(res.input)}</span>`;
+  card.appendChild(inRow);
+
+  const outRow = document.createElement('div');
+  outRow.className = 'card-row';
+
+  if (res.output){
+    outRow.innerHTML = `
+      <span class="tag out">${res.ok ? 'saída' : 'saída*'}</span>
+      <span class="card-text out">${escapeHtml(res.output)}</span>
+      <button class="copy-btn">copiar</button>
+    `;
+    outRow.querySelector('.copy-btn').addEventListener('click', (e) => {
+      navigator.clipboard.writeText(res.output);
+      e.target.textContent = 'copiado';
+      e.target.classList.add('copied');
+      setTimeout(() => { e.target.textContent = 'copiar'; e.target.classList.remove('copied'); }, 1400);
+    });
+  } else {
+    outRow.innerHTML = `<span class="tag fail">falhou</span><span class="card-text dim">não encontrei um trecho base64 válido nessa linha — será mantida como está na exportação.</span>`;
+  }
+  card.appendChild(outRow);
+  return card;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function buildM3U(lines){
+  const hasHeader = lines.some(l => l.type === 'meta' && l.raw.trim().toUpperCase().startsWith('#EXTM3U'));
+  const body = lines.map(l => {
+    if (l.type === 'url') return l.output || l.input;
+    return l.raw;
+  }).join('\n');
+  return hasHeader ? body : '#EXTM3U\n' + body;
+}
+
+function buildTXT(lines){
+  return lines
+    .filter(l => l.type === 'url')
+    .map(l => l.output || l.input)
+    .join('\n');
+}
+
+function download(filename, content){
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+exportM3uBtn.addEventListener('click', () => {
+  if (!lastLines.length) return;
+  download(`${currentFilename}.m3u`, buildM3U(lastLines));
+});
+
+exportTxtBtn.addEventListener('click', () => {
+  if (!lastLines.length) return;
+  download(`${currentFilename}.txt`, buildTXT(lastLines));
+});
+</script>
+</body>
+</html>

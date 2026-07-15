@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Logo Extractor ── M3U Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f18;--bg2:#12141f;--bg3:#181a28;
+  --glass:rgba(255,255,255,0.04);--glass2:rgba(255,255,255,0.07);--glass3:rgba(255,255,255,0.10);
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--border3:rgba(255,255,255,0.20);
+  --p1:#6c63ff;--p2:#00d4ff;--p3:#ff6b6b;--p4:#ffd166;--p5:#06d6a0;
+  --tx:#f0f2ff;--tx2:#8b90b8;--tx3:#4a4f6e;
+  --mono:'DM Mono',monospace;--head:'Outfit',sans-serif;--body:'DM Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:var(--body);font-size:13px}
+.blob{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;opacity:.18}
+.blob1{width:500px;height:500px;background:var(--p5);top:-150px;left:-100px}
+.blob2{width:400px;height:400px;background:var(--p2);bottom:-100px;right:-80px}
+.app{position:relative;z-index:1;display:flex;height:100vh;flex-direction:column}
+
+/* TOPBAR */
+.topbar{height:52px;flex-shrink:0;display:flex;align-items:center;padding:0 20px;
+  background:rgba(13,15,24,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);gap:0}
+.brand{display:flex;align-items:center;gap:10px;padding-right:20px;border-right:1px solid var(--border);margin-right:20px}
+.brand-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--p5),var(--p2));
+  display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 4px 16px rgba(6,214,160,.35)}
+.brand-name{font-family:var(--head);font-size:17px;font-weight:800;letter-spacing:-.3px;
+  background:linear-gradient(90deg,#fff,var(--p5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.brand-tag{font-family:var(--mono);font-size:9px;color:var(--tx3);margin-left:2px;letter-spacing:.05em}
+.suite-links{display:flex;gap:6px}
+.suite-link{font-family:var(--head);font-size:11px;font-weight:600;color:var(--tx3);padding:5px 12px;
+  border-radius:6px;cursor:pointer;border:1px solid transparent;text-decoration:none;transition:all .15s}
+.suite-link:hover{color:var(--tx2);border-color:var(--border2);background:var(--glass)}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pill{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;
+  background:var(--glass);border:1px solid var(--border2);font-family:var(--mono);font-size:9px;color:var(--tx3)}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:var(--tx3)}
+.pill.live .dot{background:var(--p5);box-shadow:0 0 8px var(--p5)}
+.pill.live{color:var(--p5);border-color:rgba(6,214,160,.2)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;
+  font-family:var(--head);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;border:none}
+.btn-pri{background:linear-gradient(135deg,var(--p5),var(--p2));color:#000;box-shadow:0 4px 16px rgba(6,214,160,.3)}
+.btn-pri:hover{opacity:.9;transform:translateY(-1px)}
+.btn-ghost{background:var(--glass);border:1px solid var(--border2);color:var(--tx2)}
+.btn-ghost:hover{background:var(--glass2);border-color:var(--border3);color:var(--tx)}
+.btn-green{background:rgba(6,214,160,.15);border:1px solid rgba(6,214,160,.3);color:var(--p5)}
+.btn-green:hover{background:rgba(6,214,160,.25)}
+.btn-red{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.25);color:var(--p3)}
+.btn-red:hover{background:rgba(255,107,107,.22)}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-xs{padding:3px 8px;font-size:10px}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* INPUTS */
+input[type=text],input[type=url],textarea{background:rgba(255,255,255,.05);border:1px solid var(--border2);
+  border-radius:8px;color:var(--tx);font-family:var(--body);font-size:12px;padding:8px 12px;outline:none;transition:all .15s;width:100%}
+input:focus,textarea:focus{border-color:var(--p5);background:rgba(6,214,160,.05);box-shadow:0 0 0 3px rgba(6,214,160,.08)}
+input::placeholder,textarea::placeholder{color:var(--tx3)}
+textarea{resize:vertical;font-family:var(--mono);font-size:11px;line-height:1.7}
+input[type=file]{display:none}
+
+/* MAIN LAYOUT */
+.content{flex:1;overflow:hidden;display:flex}
+.left-panel{width:320px;flex-shrink:0;background:rgba(13,15,24,.7);backdrop-filter:blur(20px);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.right-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg2)}
+
+.sp-head{padding:12px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(255,255,255,.02)}
+.sp-title{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tx2);display:flex;align-items:center;gap:8px}
+.sp-title::before{content:'';display:block;width:3px;height:11px;background:linear-gradient(180deg,var(--p5),var(--p2));border-radius:2px}
+.scroll{flex:1;overflow-y:auto;padding:14px}
+.scroll::-webkit-scrollbar{width:4px}
+.scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* DROP ZONE */
+.drop-zone{border:1.5px dashed var(--border2);border-radius:10px;padding:20px 14px;text-align:center;
+  cursor:pointer;transition:all .2s;background:var(--glass);margin-bottom:12px}
+.drop-zone:hover,.drop-zone.dov{border-color:var(--p5);background:rgba(6,214,160,.06)}
+.dz-icon{font-size:24px;margin-bottom:6px}
+.dz-t{font-family:var(--head);font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:2px}
+.dz-s{font-family:var(--mono);font-size:9px;color:var(--tx3);line-height:1.5}
+
+/* URL INPUT */
+.url-section{background:var(--glass);border:1px solid var(--border2);border-radius:10px;padding:12px;margin-bottom:12px}
+.url-label{font-family:var(--head);font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--tx3);margin-bottom:8px}
+.url-row{display:flex;gap:6px;margin-bottom:8px}
+.url-row input{flex:1}
+
+/* SECTION DIVIDER */
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--tx3);font-family:var(--mono);font-size:9px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* OPTIONS */
+.opt-section{background:var(--glass);border:1px solid var(--border2);border-radius:10px;padding:12px;margin-bottom:12px}
+.opt-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.opt-row:last-child{margin-bottom:0}
+.opt-label{font-family:var(--head);font-size:11px;font-weight:600;color:var(--tx2)}
+.opt-sub{font-family:var(--mono);font-size:9px;color:var(--tx3);margin-top:1px}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border2);border-radius:20px;cursor:pointer;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;
+  background:var(--tx3);border-radius:50%;transition:.2s}
+.toggle input:checked + .toggle-slider{background:var(--p5)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(16px);background:#000}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);
+  flex-shrink:0;background:rgba(13,15,24,.5);backdrop-filter:blur(10px);flex-wrap:wrap}
+.search-box{display:flex;align-items:center;flex:1;min-width:140px;background:var(--glass);
+  border:1px solid var(--border2);border-radius:8px;overflow:hidden}
+.search-box input{background:transparent;border:none;padding:6px 10px;font-size:12px;flex:1;min-width:0}
+.search-box input:focus{box-shadow:none;background:transparent}
+.search-ico{padding:0 8px;color:var(--tx3);font-size:12px}
+.stat-chip{font-family:var(--mono);font-size:10px;color:var(--tx3);padding:4px 10px;
+  background:var(--glass);border:1px solid var(--border);border-radius:6px;white-space:nowrap}
+.stat-chip b{color:var(--p5)}
+
+/* GRID */
+.logo-grid{flex:1;overflow-y:auto;padding:14px;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;align-content:start}
+.logo-grid::-webkit-scrollbar{width:4px}
+.logo-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.logo-card{background:var(--glass);border:1px solid var(--border);border-radius:10px;overflow:hidden;
+  transition:all .15s;position:relative}
+.logo-card:hover{border-color:var(--border3);background:var(--glass2);transform:translateY(-1px)}
+.logo-card .img-wrap{height:64px;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.3);padding:8px}
+.logo-card img{max-width:100%;max-height:100%;object-fit:contain}
+.logo-card .img-wrap .no-img{font-size:22px;color:var(--tx3)}
+.logo-card .card-body{padding:8px}
+.card-id{font-family:var(--head);font-size:10px;font-weight:600;color:var(--tx);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
+.card-url{font-family:var(--mono);font-size:8px;color:var(--tx3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-badge{position:absolute;top:6px;right:6px;font-family:var(--mono);font-size:7px;font-weight:700;
+  padding:2px 5px;border-radius:4px;background:rgba(6,214,160,.15);color:var(--p5);border:1px solid rgba(6,214,160,.25)}
+.dup-badge{background:rgba(255,107,107,.15);color:var(--p3);border-color:rgba(255,107,107,.25)}
+.card-rm{position:absolute;top:4px;left:4px;background:rgba(255,107,107,.2);border:none;
+  border-radius:4px;width:18px;height:18px;cursor:pointer;color:var(--p3);font-size:10px;
+  display:none;align-items:center;justify-content:center;transition:all .15s}
+.logo-card:hover .card-rm{display:flex}
+.card-rm:hover{background:rgba(255,107,107,.4)}
+
+/* EMPTY */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;color:var(--tx3);padding:40px}
+.empty-ico{font-size:48px;opacity:.4}
+.empty-t{font-family:var(--head);font-size:16px;font-weight:700;color:var(--tx2)}
+.empty-s{font-family:var(--mono);font-size:10px;text-align:center;line-height:1.7;max-width:280px}
+
+/* TOAST */
+.toast-area{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border2);font-family:var(--head);font-size:12px;
+  font-weight:500;color:var(--tx);box-shadow:0 8px 24px rgba(0,0,0,.4);animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.toast .t-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.toast.suc .t-dot{background:var(--p5)}.toast.err .t-dot{background:var(--p3)}.toast.warn .t-dot{background:var(--p4)}.toast.inf .t-dot{background:var(--p2)}
+
+/* JSON PREVIEW */
+.json-preview{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.json-box{background:var(--bg3);border:1px solid var(--border2);border-radius:14px;
+  width:100%;max-width:680px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.json-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.json-title{font-family:var(--head);font-size:14px;font-weight:700;flex:1}
+.json-code{flex:1;overflow-y:auto;padding:16px;font-family:var(--mono);font-size:11px;color:var(--p5);
+  line-height:1.7;background:rgba(0,0,0,.3)}
+.json-code::-webkit-scrollbar{width:4px}
+.json-code::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.json-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+</style>
+</head>
+<body>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">🖼</div>
+    <div>
+      <div class="brand-name">Logo Extractor</div>
+    </div>
+  </div>
+  <div class="suite-links">
+    <span class="brand-tag">M3U Suite /</span>
+    <a class="suite-link" href="github-link-gen.html">🔗 Link Generator</a>
+    <a class="suite-link" href="m3ustudio.html">📋 M3U Studio</a>
+  </div>
+  <div class="topbar-right">
+    <div class="pill live" id="stat-pill">
+      <div class="dot"></div>
+      <span id="pill-txt">0 logos</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- LEFT: INPUT -->
+  <div class="left-panel">
+    <div class="sp-head"><div class="sp-title">Fonte de Dados</div></div>
+    <div class="scroll">
+
+      <!-- DROP ZONE -->
+      <div class="drop-zone" id="dz-m3u"
+        ondragover="dzo(event,this)" ondragleave="dzl(this)" ondrop="dzd(event,this)"
+        onclick="document.getElementById('fi-m3u').click()">
+        <div class="dz-icon">📂</div>
+        <div class="dz-t">Arquivo M3U</div>
+        <div class="dz-s">Arraste ou clique para selecionar<br>.m3u · .m3u8 · .txt</div>
+      </div>
+      <input type="file" id="fi-m3u" accept=".m3u,.m3u8,.txt" multiple onchange="loadFiles(this.files)">
+
+      <div class="divider">ou cole uma URL</div>
+
+      <!-- URL INPUT -->
+      <div class="url-section">
+        <div class="url-label">URL do M3U</div>
+        <div class="url-row">
+          <input type="url" id="url-in" placeholder="https://exemplo.com/lista.m3u">
+        </div>
+        <button class="btn btn-ghost btn-sm" style="width:100%" onclick="loadURL()">⬇ Carregar URL</button>
+      </div>
+
+      <div class="divider">ou cole o conteúdo</div>
+
+      <!-- PASTE AREA -->
+      <div class="url-section">
+        <div class="url-label">Colar M3U</div>
+        <textarea id="paste-in" rows="5" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;https://...&quot;,Canal&#10;http://..."></textarea>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="processPaste()">⚡ Processar</button>
+      </div>
+
+      <!-- OPTIONS -->
+      <div class="opt-section">
+        <div class="url-label" style="margin-bottom:10px">Opções de Extração</div>
+        <div class="opt-row">
+          <div>
+            <div class="opt-label">Ignorar duplicados</div>
+            <div class="opt-sub">Mesmo URL → apenas uma entrada</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="opt-dedup" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="opt-row">
+          <div>
+            <div class="opt-label">Usar nome como ID</div>
+            <div class="opt-sub">ID = slug do nome do canal</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="opt-name-id" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="opt-row">
+          <div>
+            <div class="opt-label">Usar tvg-id como ID</div>
+            <div class="opt-sub">Prioriza tvg-id quando disponível</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="opt-tvg-id" checked><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <button class="btn btn-red btn-sm" style="width:100%" onclick="clearAll()">🗑 Limpar tudo</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: GRID -->
+  <div class="right-panel">
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-ico">🔍</span>
+        <input type="text" id="search-in" placeholder="Buscar por ID ou URL..." oninput="filterLogos()">
+      </div>
+      <div class="stat-chip">Total: <b id="cnt-total">0</b></div>
+      <div class="stat-chip">Únicos: <b id="cnt-unique">0</b></div>
+      <div class="stat-chip">Sem logo: <b id="cnt-nologo">0</b></div>
+      <button class="btn btn-ghost btn-sm" onclick="showJSON()">👁 Preview JSON</button>
+      <button class="btn btn-pri btn-sm" onclick="exportJSON()">⬇ Exportar JSON</button>
+    </div>
+
+    <div id="grid-wrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-ico">🖼</div>
+        <div class="empty-t">Nenhuma logo extraída</div>
+        <div class="empty-s">Carregue um arquivo M3U, cole uma URL ou paste o conteúdo para extrair todas as imagens tvg-logo</div>
+      </div>
+      <div class="logo-grid" id="logo-grid" style="display:none"></div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+</div><!-- /app -->
+
+<!-- JSON PREVIEW MODAL -->
+<div class="json-preview" id="json-modal" style="display:none" onclick="if(event.target===this) closeJSON()">
+  <div class="json-box">
+    <div class="json-head">
+      <div class="json-title">📄 logos.json — Preview</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeJSON()">✕ Fechar</button>
+    </div>
+    <pre class="json-code" id="json-code"></pre>
+    <div class="json-foot">
+      <button class="btn btn-ghost btn-sm" onclick="copyJSON()">📋 Copiar</button>
+      <button class="btn btn-pri btn-sm" onclick="exportJSON()">⬇ Baixar logos.json</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-area" id="toast-area"></div>
+
+<script>
+var LOGOS = {}; // id -> url (deduped)
+var ALL_ENTRIES = []; // {id, url, name} full list
+var filtered = [];
+
+function slug(s){
+  return (s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toast(msg,type,dur){
+  type=type||'inf'; dur=dur||3200;
+  var a=document.getElementById('toast-area'),el=document.createElement('div');
+  el.className='toast '+type;
+  el.innerHTML='<div class="t-dot"></div><span>'+msg+'</span>';
+  a.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0';el.style.transition='.3s';setTimeout(function(){ el.remove(); },300); },dur);
+}
+
+// ═══ FILE LOADING ═══
+function dzo(e,el){ e.preventDefault(); el.classList.add('dov'); }
+function dzl(el){ el.classList.remove('dov'); }
+function dzd(e,el){ e.preventDefault(); dzl(el); loadFiles(e.dataTransfer.files); }
+
+function loadFiles(files){
+  Array.prototype.forEach.call(files,function(f){
+    var r=new FileReader();
+    r.onload=function(e){ processM3U(e.target.result,'Arquivo: '+f.name); };
+    r.readAsText(f,'UTF-8');
+  });
+}
+
+function loadURL(){
+  var url=document.getElementById('url-in').value.trim();
+  if(!url){ toast('Cole uma URL primeiro','warn'); return; }
+  toast('Carregando URL...','inf');
+  // Use CORS proxy approach
+  var proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent(url);
+  fetch(proxyUrl)
+    .then(function(r){ return r.text(); })
+    .then(function(text){ processM3U(text,'URL: '+url); })
+    .catch(function(){ 
+      // Try direct
+      fetch(url)
+        .then(function(r){ return r.text(); })
+        .then(function(text){ processM3U(text,'URL: '+url); })
+        .catch(function(){ toast('Erro ao carregar URL. Tente baixar e usar o arquivo.','err'); });
+    });
+}
+
+function processPaste(){
+  var text=document.getElementById('paste-in').value.trim();
+  if(!text){ toast('Cole algo primeiro','warn'); return; }
+  processM3U(text,'Cole');
+  document.getElementById('paste-in').value='';
+}
+
+function processM3U(text, source){
+  var dedup=document.getElementById('opt-dedup').checked;
+  var useName=document.getElementById('opt-name-id').checked;
+  var useTvgId=document.getElementById('opt-tvg-id').checked;
+
+  var lines=text.split(/\r?\n/);
+  var added=0, skipped=0;
+  var inf=null;
+
+  lines.forEach(function(line){
+    line=line.trim();
+    if(line.indexOf('#EXTINF')===0){ inf=line; return; }
+    if(inf && /^(https?|rtmp|udp|rtp|mms):/.test(line)){
+      var logoM=inf.match(/tvg-logo="([^"]+)"/);
+      var logo=logoM?logoM[1].trim():'';
+      var nameM=inf.match(/,(.+)$/); var name=nameM?nameM[1].trim():'';
+      var tvgIdM=inf.match(/tvg-id="([^"]*)"/); var tvgId=tvgIdM?tvgIdM[1].trim():'';
+
+      if(logo){
+        var id='';
+        if(useTvgId && tvgId) id=tvgId;
+        else if(useName && name) id=slug(name);
+        else id=slug(name)||'logo-'+Object.keys(LOGOS).length;
+
+        var isDup = dedup && LOGOS[id]===logo;
+        var isDupUrl = dedup && Object.values(LOGOS).indexOf(logo)>=0;
+
+        if(!isDup){
+          if(dedup && isDupUrl){
+            skipped++;
+          } else {
+            // Ensure unique key
+            var finalId=id;
+            var n=1;
+            while(LOGOS[finalId]!==undefined && LOGOS[finalId]!==logo) finalId=id+'-'+(n++);
+            LOGOS[finalId]=logo;
+            ALL_ENTRIES.push({id:finalId,url:logo,name:name,tvgId:tvgId,dup:false});
+            added++;
+          }
+        } else { skipped++; }
+      }
+      inf=null;
+    }
+  });
+
+  renderGrid();
+  updateStats();
+  toast(added+' logos extraídas'+(skipped?' · '+skipped+' duplicadas ignoradas':''),'suc');
+}
+
+// ═══ RENDER ═══
+function filterLogos(){
+  var q=(document.getElementById('search-in').value||'').toLowerCase();
+  filtered=ALL_ENTRIES.filter(function(e){
+    return !q || e.id.toLowerCase().indexOf(q)>=0 || e.url.toLowerCase().indexOf(q)>=0 || (e.name||'').toLowerCase().indexOf(q)>=0;
+  });
+  renderGrid(true);
+}
+
+function renderGrid(fromFilter){
+  var list=fromFilter ? filtered : ALL_ENTRIES;
+  var grid=document.getElementById('logo-grid');
+  var empty=document.getElementById('empty-state');
+
+  if(!ALL_ENTRIES.length){ grid.style.display='none'; empty.style.display='flex'; return; }
+  grid.style.display='grid'; empty.style.display='none';
+
+  grid.innerHTML='';
+  list.forEach(function(e){
+    var card=document.createElement('div'); card.className='logo-card';
+    var imgWrap=document.createElement('div'); imgWrap.className='img-wrap';
+    var img=document.createElement('img');
+    img.src=e.url;
+    img.onerror=function(){ imgWrap.innerHTML='<span class="no-img">🚫</span>'; };
+    imgWrap.appendChild(img);
+
+    var body=document.createElement('div'); body.className='card-body';
+    var idEl=document.createElement('div'); idEl.className='card-id'; idEl.textContent=e.id; idEl.title=e.id;
+    var urlEl=document.createElement('div'); urlEl.className='card-url'; urlEl.textContent=e.url; urlEl.title=e.url;
+    body.appendChild(idEl); body.appendChild(urlEl);
+
+    var rm=document.createElement('button'); rm.className='card-rm'; rm.textContent='✕'; rm.title='Remover';
+    rm.onclick=function(){ removeEntry(e.id); };
+
+    card.appendChild(rm);
+    card.appendChild(imgWrap);
+    card.appendChild(body);
+    grid.appendChild(card);
+  });
+}
+
+function removeEntry(id){
+  delete LOGOS[id];
+  ALL_ENTRIES=ALL_ENTRIES.filter(function(e){ return e.id!==id; });
+  renderGrid(); updateStats();
+  toast('"'+id+'" removido','inf');
+}
+
+function updateStats(){
+  var total=ALL_ENTRIES.length;
+  var unique=Object.keys(LOGOS).length;
+  document.getElementById('cnt-total').textContent=total;
+  document.getElementById('cnt-unique').textContent=unique;
+  document.getElementById('pill-txt').textContent=unique+' logos';
+  var pill=document.getElementById('stat-pill');
+  pill.className='pill'+(unique>0?' live':'');
+}
+
+function clearAll(){
+  if(!ALL_ENTRIES.length) return;
+  if(!confirm('Limpar todas as logos?')) return;
+  LOGOS={}; ALL_ENTRIES=[];
+  renderGrid(); updateStats();
+  toast('Limpo','inf');
+}
+
+// ═══ EXPORT ═══
+function buildJSON(){
+  return JSON.stringify(LOGOS,null,2);
+}
+
+function showJSON(){
+  if(!Object.keys(LOGOS).length){ toast('Nenhuma logo para exportar','warn'); return; }
+  var code=document.getElementById('json-code');
+  code.textContent=buildJSON();
+  document.getElementById('json-modal').style.display='flex';
+}
+function closeJSON(){ document.getElementById('json-modal').style.display='none'; }
+
+function copyJSON(){
+  navigator.clipboard.writeText(buildJSON()).then(function(){ toast('JSON copiado!','suc'); });
+}
+
+function exportJSON(){
+  if(!Object.keys(LOGOS).length){ toast('Nenhuma logo para exportar','warn'); return; }
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([buildJSON()],{type:'application/json'}));
+  a.download='logos.json'; a.click(); URL.revokeObjectURL(a.href);
+  toast('logos.json exportado','suc');
+}
+</script>
+</body>
+</html>
