@@ -323,9 +323,9 @@ main{padding:20px 26px 60px;min-width:0;}
       <input id="fPass" type="text" placeholder="Capoeira2308">
     </div>
     <div class="field">
-      <label>Proxy CORS (opcional)</label>
+      <label>Proxy CORS personalizado (opcional)</label>
       <input id="fProxy" type="text" placeholder="https://seu-worker.workers.dev/?url=">
-      <div class="field-hint">Se o painel bloquear requisições do navegador (CORS), informe a URL de um proxy que repasse o parâmetro <code>url=</code>.</div>
+      <div class="field-hint">Não é obrigatório. Se o painel bloquear requisições do navegador, o app tenta sozinho, em ordem: direto → proxy personalizado (se preenchido) → proxies públicos automáticos. As credenciais passam pelo proxy que for usado — deixe em branco se preferir usar só os automáticos.</div>
     </div>
     <div class="field" style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="fSave" style="width:auto;" checked>
@@ -451,7 +451,7 @@ main{padding:20px 26px 60px;min-width:0;}
 
 <script>
 /* ============ State ============ */
-let conn = null; // {proto, host, port, user, pass, proxy}
+let conn = null; // {proto, host, port, user, pass, customProxy}
 let account = null;
 let categories = { live: [], vod: [], series: [] };
 let streamsByCat = { live: {}, vod: {}, series: {} }; // categoryId -> array
@@ -462,6 +462,27 @@ let hls = null;
 let currentSeries = null;
 let currentPreviewUrl = '';
 let useMediaProxy = false;
+let loginProxyIdx = -1;   // which proxy (if any) worked for the API/login calls
+let mediaProxyIdx = -1;   // which proxy (if any) is active for the preview player
+
+// Built-in public CORS proxies, tried automatically in order when the panel
+// blocks direct browser requests. No setup needed. Credentials do pass through
+// whichever third-party proxy ends up being used — same tradeoff as any public
+// CORS relay, worth knowing if the panel is sensitive.
+const DEFAULT_PROXIES = [
+  { name: 'corsproxy.io',  wrap: u => 'https://corsproxy.io/?url=' + encodeURIComponent(u) },
+  { name: 'allorigins',    wrap: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
+  { name: 'codetabs',      wrap: u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u) },
+];
+
+function proxyList(){
+  const list = [];
+  if(conn && conn.customProxy) list.push({ name: 'proxy personalizado', wrap: u => conn.customProxy + encodeURIComponent(u) });
+  return list.concat(DEFAULT_PROXIES);
+}
+function isCorsLike(e){
+  return e instanceof TypeError || (e.message && e.message.includes('Failed to fetch'));
+}
 
 const $ = (id) => document.getElementById(id);
 
@@ -505,25 +526,28 @@ function closeModal(id){ $(id).classList.remove('show'); }
 function baseUrl(){
   return `${conn.proto}://${conn.host}${conn.port ? ':'+conn.port : ''}`;
 }
-function apiUrl(action, extra={}){
+// rawUrl: builds the direct URL to the panel. proxyIdx -1 = no proxy, otherwise index into proxyList().
+function apiUrl(action, extra={}, proxyIdx=-1){
   const params = new URLSearchParams({ username: conn.user, password: conn.pass, action, ...extra });
-  const url = `${baseUrl()}/player_api.php?${params.toString()}`;
-  return conn.proxy ? conn.proxy + encodeURIComponent(url) : url;
+  const raw = `${baseUrl()}/player_api.php?${params.toString()}`;
+  return proxyIdx >= 0 ? proxyList()[proxyIdx].wrap(raw) : raw;
 }
-function getUrl(extra={}){
+function getUrl(extra={}, proxyIdx=-1){
   const params = new URLSearchParams({ username: conn.user, password: conn.pass, ...extra });
-  const url = `${baseUrl()}/get.php?${params.toString()}`;
-  return conn.proxy ? conn.proxy + encodeURIComponent(url) : url;
+  const raw = `${baseUrl()}/get.php?${params.toString()}`;
+  return proxyIdx >= 0 ? proxyList()[proxyIdx].wrap(raw) : raw;
 }
+// Raw stream link — always the real panel URL. Used for copy/export so links work in VLC/IPTV apps outside the browser.
 function streamUrl(type, id, ext){
   const seg = type === 'live' ? 'live' : (type === 'vod' ? 'movie' : 'series');
   const e = ext || (type === 'live' ? 'ts' : 'mp4');
-  const raw = `${baseUrl()}/${seg}/${conn.user}/${conn.pass}/${id}.${e}`;
-  return (useMediaProxy && conn.proxy) ? conn.proxy + encodeURIComponent(raw) : raw;
+  return `${baseUrl()}/${seg}/${conn.user}/${conn.pass}/${id}.${e}`;
 }
 
-async function apiGet(action, extra={}){
-  const res = await fetch(apiUrl(action, extra));
+// API calls automatically reuse whichever proxy worked at login (loginProxyIdx), unless overridden.
+async function apiGet(action, extra={}, proxyIdx){
+  const idx = (proxyIdx !== undefined) ? proxyIdx : loginProxyIdx;
+  const res = await fetch(apiUrl(action, extra, idx));
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -548,33 +572,12 @@ function parseExampleUrl(){
   }
 }
 
-function showErr(msg, opts){
+function showErr(msg){
   const b = $('errBox');
   b.innerHTML = escapeHtml(msg);
-  if(opts && opts.showProxyBtn){
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-ghost btn-sm';
-    btn.style.marginTop = '10px';
-    btn.textContent = '⚡ Usar proxy CORS e tentar de novo';
-    btn.onclick = opts.onRetry;
-    b.appendChild(document.createElement('br'));
-    b.appendChild(btn);
-  }
   b.classList.add('show');
 }
 function hideErr(){ $('errBox').classList.remove('show'); $('errBox').innerHTML=''; }
-
-function ensureProxyThen(retryFn){
-  if(!conn.proxy){
-    const p = window.prompt('Informe a URL do proxy CORS (ex.: https://seu-worker.workers.dev/?url=)\n\nO proxy precisa aceitar a URL de destino como parâmetro "url=" e repassar a requisição.', 'https://');
-    if(!p) return;
-    conn.proxy = p.trim();
-    $('fProxy').value = conn.proxy;
-  } else {
-    toast('Usando proxy configurado: ' + conn.proxy);
-  }
-  retryFn();
-}
 
 function saveProfile(c){
   const list = JSON.parse(localStorage.getItem('xtream_profiles') || '[]');
@@ -599,7 +602,7 @@ function loadProfiles(){
 function fillProfile(i){
   const p = window._profiles[i];
   $('fProto').value = p.proto; $('fHost').value = p.host; $('fPort').value = p.port;
-  $('fUser').value = p.user; $('fPass').value = p.pass; $('fProxy').value = p.proxy || '';
+  $('fUser').value = p.user; $('fPass').value = p.pass; $('fProxy').value = p.customProxy || '';
 }
 function removeProfile(i){
   const list = JSON.parse(localStorage.getItem('xtream_profiles') || '[]');
@@ -617,35 +620,41 @@ async function connect(){
   const proto = $('fProto').value;
   const user = $('fUser').value.trim();
   const pass = $('fPass').value.trim();
-  const proxy = $('fProxy').value.trim();
+  const customProxy = $('fProxy').value.trim();
   if(!host || !user || !pass){ showErr('Preencha servidor, usuário e senha.'); return; }
 
-  conn = { host, port, proto, user, pass, proxy };
+  conn = { host, port, proto, user, pass, customProxy };
+  loginProxyIdx = -1;
   const btn = $('btnConnect');
   btn.disabled = true; btn.textContent = 'Conectando…';
+  await attemptConnect(-1, btn);
+}
 
+async function attemptConnect(proxyIdx, btn){
   try{
-    const info = await apiGet('');
+    if(proxyIdx >= 0){
+      btn.textContent = `Tentando via proxy (${proxyIdx+1}/${proxyList().length}: ${proxyList()[proxyIdx].name})…`;
+    }
+    const info = await apiGet('', {}, proxyIdx);
     if(!info || !info.user_info){ throw new Error('Resposta inesperada do painel.'); }
     if(info.user_info.auth === 0){ throw new Error('Autenticação falhou. Verifique usuário e senha.'); }
     account = info;
+    loginProxyIdx = proxyIdx;
     if($('fSave').checked) saveProfile(conn);
+    if(proxyIdx >= 0) toast('Conectado via proxy automático: ' + proxyList()[proxyIdx].name);
     enterApp();
   }catch(e){
     console.error(e);
-    let msg = 'Não foi possível conectar. ';
-    let corsLike = false;
-    if(e.message.includes('Failed to fetch') || e instanceof TypeError){
-      msg += 'Provável bloqueio de CORS pelo painel.';
-      corsLike = true;
-    } else {
-      msg += e.message;
+    const list = proxyList();
+    if(isCorsLike(e) && proxyIdx + 1 < list.length){
+      // Panel blocked the direct request — automatically fall through to the next built-in proxy.
+      return attemptConnect(proxyIdx + 1, btn);
     }
     btn.disabled = false; btn.textContent = 'Conectar e explorar';
-    showErr(msg, corsLike ? {
-      showProxyBtn: true,
-      onRetry: () => { hideErr(); ensureProxyThen(connect); }
-    } : null);
+    let msg = proxyIdx >= 0
+      ? `Não foi possível conectar mesmo tentando ${list.length} proxies automáticos. Os proxies públicos podem estar temporariamente indisponíveis ou o painel exigir headers que eles não repassam. Tente novamente em instantes, ou informe seu próprio proxy no campo "Proxy CORS".`
+      : (isCorsLike(e) ? 'Bloqueio de CORS pelo painel.' : 'Não foi possível conectar. ' + e.message);
+    showErr(msg);
   }
 }
 
@@ -654,6 +663,7 @@ function logout(){
   categories = { live: [], vod: [], series: [] };
   streamsByCat = { live: {}, vod: {}, series: {} };
   selected.clear();
+  loginProxyIdx = -1; mediaProxyIdx = -1; useMediaProxy = false;
   $('app').classList.remove('active');
   $('loginScreen').style.display = 'flex';
   $('btnConnect').disabled = false; $('btnConnect').textContent = 'Conectar e explorar';
@@ -692,11 +702,15 @@ function renderAccount(){
   const s = account.server_info || {};
   const expDate = u.exp_date ? new Date(u.exp_date*1000).toLocaleDateString('pt-BR') : '—';
   const statusClass = u.status === 'Active' ? 'status-ok' : 'status-bad';
+  const proxyLine = loginProxyIdx >= 0
+    ? `<div>conexão: <span style="color:var(--accent);">via proxy (${proxyList()[loginProxyIdx].name})</span></div>`
+    : `<div>conexão: direta</div>`;
   $('accountBox').innerHTML = `
     <div><b>${conn.user}</b>@${conn.host}</div>
     <div>status: <span class="${statusClass}">${u.status || '—'}</span></div>
     <div>expira: ${expDate}</div>
     <div>conexões: ${u.active_cons || 0}/${u.max_connections || '∞'}</div>
+    ${proxyLine}
   `;
 }
 
@@ -950,80 +964,81 @@ function openPreview(it){
   // most panels also serve the same channel as an HLS manifest under .m3u8, so try that first.
   // VOD keeps its own container_extension (usually mp4/mkv), which native <video> can often play directly.
   const startExt = currentType === 'live' ? 'm3u8' : (it.container_extension || 'mp4');
-  loadPreview(startExt);
+  loadPreview(startExt, -1);
 }
 
-function loadPreview(ext){
+function loadPreview(ext, proxyIdx){
   currentPreviewExt = ext;
+  mediaProxyIdx = (proxyIdx !== undefined) ? proxyIdx : -1;
+  useMediaProxy = mediaProxyIdx >= 0;
+  updateProxyToggleBtn();
+
   const it = currentPreviewItem;
-  const url = streamUrl(currentType, it.stream_id, ext);
+  const raw = streamUrl(currentType, it.stream_id, ext);
+  const url = mediaProxyIdx >= 0 ? proxyList()[mediaProxyIdx].wrap(raw) : raw;
   currentPreviewUrl = url;
   $('previewUrl').textContent = url;
   $('previewDownload').href = url;
   $('previewDownload').setAttribute('download', (it.name || 'stream') + '.' + ext);
-  setPreviewStatus('carregando (' + ext + ')…', false);
+  setPreviewStatus(mediaProxyIdx >= 0
+    ? `carregando (${ext}) via proxy ${proxyList()[mediaProxyIdx].name}…`
+    : 'carregando (' + ext + ')…', false);
 
   const video = $('previewVideo');
   video.pause(); video.removeAttribute('src'); video.load();
   if(hls){ hls.destroy(); hls = null; }
+
+  const escalate = (reason) => {
+    const list = proxyList();
+    if(mediaProxyIdx + 1 < list.length){
+      toast('Reprodução falhou — tentando proxy automático (' + list[mediaProxyIdx+1].name + ')…');
+      loadPreview(ext, mediaProxyIdx + 1);
+    } else {
+      setPreviewStatus(reason + ' Já tentei direto e com todos os proxies automáticos. Tente outra extensão (.ts/.m3u8), "Abrir em nova guia" ou "Baixar" e reproduzir num player externo como VLC.', true);
+    }
+  };
 
   const isM3u8 = ext === 'm3u8';
   if(isM3u8 && window.Hls && Hls.isSupported()){
     hls = new Hls();
     hls.loadSource(url);
     hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, ()=>{ setPreviewStatus('pronto — clique em play', false); });
+    hls.on(Hls.Events.MANIFEST_PARSED, ()=>{ setPreviewStatus('pronto — clique em play' + (mediaProxyIdx>=0 ? ' (via ' + proxyList()[mediaProxyIdx].name + ')' : ''), false); });
     hls.on(Hls.Events.ERROR, (evt, data)=>{
-      if(data.fatal){
-        setPreviewStatus('Falha ao carregar .m3u8 (' + data.type + '). Pode ser CORS, mixed content (http/https) ou o canal não suportar HLS.', true, true);
-      }
+      if(data.fatal) escalate('Falha ao carregar .m3u8 (' + data.type + ').');
     });
   } else if(isM3u8 && video.canPlayType('application/vnd.apple.mpegurl')){
     video.src = url; // Safari native HLS
     setPreviewStatus('usando suporte nativo a HLS do navegador', false);
   } else {
     video.src = url;
-    video.onerror = () => setPreviewStatus('O navegador não conseguiu reproduzir ".' + ext + '" diretamente.', true, true);
+    video.onerror = () => escalate('O navegador não conseguiu reproduzir ".' + ext + '" diretamente.');
     setPreviewStatus('usando player nativo do navegador', false);
   }
 }
 
-function tryPreviewExt(ext){ loadPreview(ext); }
+function tryPreviewExt(ext){ loadPreview(ext, -1); }
 
 function toggleMediaProxy(){
   if(!useMediaProxy){
-    ensureProxyThen(() => {
-      useMediaProxy = true;
-      updateProxyToggleBtn();
-      loadPreview(currentPreviewExt);
-    });
+    loadPreview(currentPreviewExt, 0); // jump straight to the first built-in proxy
   } else {
-    useMediaProxy = false;
-    updateProxyToggleBtn();
-    loadPreview(currentPreviewExt);
+    loadPreview(currentPreviewExt, -1); // back to direct
   }
 }
 function updateProxyToggleBtn(){
   const btn = $('btnProxyToggle');
   if(!btn) return;
-  btn.textContent = useMediaProxy ? '⚡ Proxy: ligado' : '⚡ Proxy: desligado';
-  btn.style.borderColor = useMediaProxy ? 'var(--accent)' : '';
-  btn.style.color = useMediaProxy ? 'var(--accent)' : '';
+  const active = mediaProxyIdx >= 0;
+  btn.textContent = active ? '⚡ Proxy: ' + proxyList()[mediaProxyIdx].name : '⚡ Proxy: desligado';
+  btn.style.borderColor = active ? 'var(--accent)' : '';
+  btn.style.color = active ? 'var(--accent)' : '';
 }
 
-function setPreviewStatus(msg, isErr, showProxyBtn){
+function setPreviewStatus(msg, isErr){
   const el = $('previewStatus');
   el.classList.toggle('err', !!isErr);
-  el.innerHTML = escapeHtml(msg);
-  if(showProxyBtn){
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-ghost btn-sm';
-    btn.style.marginTop = '8px';
-    btn.style.display = 'block';
-    btn.textContent = '⚡ Usar proxy CORS e tentar de novo';
-    btn.onclick = () => ensureProxyThen(() => { useMediaProxy = true; loadPreview(currentPreviewExt); });
-    el.appendChild(btn);
-  }
+  el.textContent = msg;
 }
 
 function closePreview(){
@@ -1073,13 +1088,21 @@ function exportItems(items, format){
 
 async function exportFullPlaylist(){
   toast('Baixando playlist completa da conta…');
+  await attemptExportPlaylist(loginProxyIdx);
+}
+async function attemptExportPlaylist(proxyIdx){
   try{
-    const url = getUrl({ type: 'm3u_plus', output: 'ts' });
+    const url = getUrl({ type: 'm3u_plus', output: 'ts' }, proxyIdx);
     const res = await fetch(url);
     const text = await res.text();
     downloadFile('conta-completa.m3u', text, 'audio/x-mpegurl');
     toast('Playlist completa exportada');
   }catch(e){
+    const list = proxyList();
+    if(isCorsLike(e) && proxyIdx + 1 < list.length){
+      toast('Tentando via proxy automático (' + list[proxyIdx+1].name + ')…');
+      return attemptExportPlaylist(proxyIdx + 1);
+    }
     toast('Erro ao exportar playlist completa: ' + e.message);
   }
 }
