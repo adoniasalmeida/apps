@@ -435,6 +435,7 @@ main{padding:20px 26px 60px;min-width:0;}
       <div class="preview-tools">
         <button class="btn btn-ghost btn-sm" onclick="tryPreviewExt('m3u8')">Tentar .m3u8</button>
         <button class="btn btn-ghost btn-sm" onclick="tryPreviewExt('ts')">Tentar .ts</button>
+        <button class="btn btn-ghost btn-sm" id="btnProxyToggle" onclick="toggleMediaProxy()">⚡ Proxy: desligado</button>
         <button class="btn btn-ghost btn-sm" onclick="window.open(currentPreviewUrl,'_blank')">Abrir em nova guia</button>
         <a class="btn btn-ghost btn-sm" id="previewDownload" download>Baixar arquivo</a>
       </div>
@@ -460,6 +461,7 @@ let selected = new Map(); // key -> item
 let hls = null;
 let currentSeries = null;
 let currentPreviewUrl = '';
+let useMediaProxy = false;
 
 const $ = (id) => document.getElementById(id);
 
@@ -516,7 +518,8 @@ function getUrl(extra={}){
 function streamUrl(type, id, ext){
   const seg = type === 'live' ? 'live' : (type === 'vod' ? 'movie' : 'series');
   const e = ext || (type === 'live' ? 'ts' : 'mp4');
-  return `${baseUrl()}/${seg}/${conn.user}/${conn.pass}/${id}.${e}`;
+  const raw = `${baseUrl()}/${seg}/${conn.user}/${conn.pass}/${id}.${e}`;
+  return (useMediaProxy && conn.proxy) ? conn.proxy + encodeURIComponent(raw) : raw;
 }
 
 async function apiGet(action, extra={}){
@@ -545,10 +548,33 @@ function parseExampleUrl(){
   }
 }
 
-function showErr(msg){
-  const b = $('errBox'); b.textContent = msg; b.classList.add('show');
+function showErr(msg, opts){
+  const b = $('errBox');
+  b.innerHTML = escapeHtml(msg);
+  if(opts && opts.showProxyBtn){
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-ghost btn-sm';
+    btn.style.marginTop = '10px';
+    btn.textContent = '⚡ Usar proxy CORS e tentar de novo';
+    btn.onclick = opts.onRetry;
+    b.appendChild(document.createElement('br'));
+    b.appendChild(btn);
+  }
+  b.classList.add('show');
 }
-function hideErr(){ $('errBox').classList.remove('show'); }
+function hideErr(){ $('errBox').classList.remove('show'); $('errBox').innerHTML=''; }
+
+function ensureProxyThen(retryFn){
+  if(!conn.proxy){
+    const p = window.prompt('Informe a URL do proxy CORS (ex.: https://seu-worker.workers.dev/?url=)\n\nO proxy precisa aceitar a URL de destino como parâmetro "url=" e repassar a requisição.', 'https://');
+    if(!p) return;
+    conn.proxy = p.trim();
+    $('fProxy').value = conn.proxy;
+  } else {
+    toast('Usando proxy configurado: ' + conn.proxy);
+  }
+  retryFn();
+}
 
 function saveProfile(c){
   const list = JSON.parse(localStorage.getItem('xtream_profiles') || '[]');
@@ -608,13 +634,18 @@ async function connect(){
   }catch(e){
     console.error(e);
     let msg = 'Não foi possível conectar. ';
+    let corsLike = false;
     if(e.message.includes('Failed to fetch') || e instanceof TypeError){
-      msg += 'Provável bloqueio de CORS pelo painel — tente informar um Proxy CORS (ex.: um Cloudflare Worker que repasse a requisição).';
+      msg += 'Provável bloqueio de CORS pelo painel.';
+      corsLike = true;
     } else {
       msg += e.message;
     }
-    showErr(msg);
     btn.disabled = false; btn.textContent = 'Conectar e explorar';
+    showErr(msg, corsLike ? {
+      showProxyBtn: true,
+      onRetry: () => { hideErr(); ensureProxyThen(connect); }
+    } : null);
   }
 }
 
@@ -908,11 +939,13 @@ function selectAllEpisodes(){
 
 /* ============ Preview ============ */
 let currentPreviewItem = null;
+let currentPreviewExt = 'm3u8';
 
 function openPreview(it){
   currentPreviewItem = it;
   $('previewTitle').textContent = it.name || it.title;
   $('previewModal').classList.add('show');
+  updateProxyToggleBtn();
   // Live channels: .ts is a raw transport stream that hls.js/browsers can't parse directly —
   // most panels also serve the same channel as an HLS manifest under .m3u8, so try that first.
   // VOD keeps its own container_extension (usually mp4/mkv), which native <video> can often play directly.
@@ -921,6 +954,7 @@ function openPreview(it){
 }
 
 function loadPreview(ext){
+  currentPreviewExt = ext;
   const it = currentPreviewItem;
   const url = streamUrl(currentType, it.stream_id, ext);
   currentPreviewUrl = url;
@@ -941,7 +975,7 @@ function loadPreview(ext){
     hls.on(Hls.Events.MANIFEST_PARSED, ()=>{ setPreviewStatus('pronto — clique em play', false); });
     hls.on(Hls.Events.ERROR, (evt, data)=>{
       if(data.fatal){
-        setPreviewStatus('Falha ao carregar .m3u8 (' + data.type + '). O painel pode não suportar HLS para este canal, bloquear CORS na resposta do stream, ou a URL usar http a partir de uma página https (mixed content). Tente ".ts", "Abrir em nova guia" ou "Baixar".', true);
+        setPreviewStatus('Falha ao carregar .m3u8 (' + data.type + '). Pode ser CORS, mixed content (http/https) ou o canal não suportar HLS.', true, true);
       }
     });
   } else if(isM3u8 && video.canPlayType('application/vnd.apple.mpegurl')){
@@ -949,17 +983,47 @@ function loadPreview(ext){
     setPreviewStatus('usando suporte nativo a HLS do navegador', false);
   } else {
     video.src = url;
-    video.onerror = () => setPreviewStatus('O navegador não conseguiu reproduzir "." + ext + " diretamente. Tente outra extensão, ou use "Abrir em nova guia" / "Baixar" e reproduza num player externo (VLC, MX Player).', true);
+    video.onerror = () => setPreviewStatus('O navegador não conseguiu reproduzir ".' + ext + '" diretamente.', true, true);
     setPreviewStatus('usando player nativo do navegador', false);
   }
 }
 
 function tryPreviewExt(ext){ loadPreview(ext); }
 
-function setPreviewStatus(msg, isErr){
+function toggleMediaProxy(){
+  if(!useMediaProxy){
+    ensureProxyThen(() => {
+      useMediaProxy = true;
+      updateProxyToggleBtn();
+      loadPreview(currentPreviewExt);
+    });
+  } else {
+    useMediaProxy = false;
+    updateProxyToggleBtn();
+    loadPreview(currentPreviewExt);
+  }
+}
+function updateProxyToggleBtn(){
+  const btn = $('btnProxyToggle');
+  if(!btn) return;
+  btn.textContent = useMediaProxy ? '⚡ Proxy: ligado' : '⚡ Proxy: desligado';
+  btn.style.borderColor = useMediaProxy ? 'var(--accent)' : '';
+  btn.style.color = useMediaProxy ? 'var(--accent)' : '';
+}
+
+function setPreviewStatus(msg, isErr, showProxyBtn){
   const el = $('previewStatus');
-  el.textContent = msg;
   el.classList.toggle('err', !!isErr);
+  el.innerHTML = escapeHtml(msg);
+  if(showProxyBtn){
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-ghost btn-sm';
+    btn.style.marginTop = '8px';
+    btn.style.display = 'block';
+    btn.textContent = '⚡ Usar proxy CORS e tentar de novo';
+    btn.onclick = () => ensureProxyThen(() => { useMediaProxy = true; loadPreview(currentPreviewExt); });
+    el.appendChild(btn);
+  }
 }
 
 function closePreview(){
