@@ -64,11 +64,27 @@ body{
   content:"";position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.6;
 }
+.login-card::after{
+  content:"";position:absolute;top:-120px;right:-120px;width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(94,234,212,0.10),transparent 70%);pointer-events:none;
+}
+.brand-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+.gear-btn{
+  background:transparent;border:1px solid var(--line-bright);color:var(--dim);width:34px;height:34px;
+  border-radius:9px;cursor:pointer;font-size:16px;transition:.2s;flex:none;
+}
+.gear-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(45deg);}
+.gear-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.advanced-panel{max-height:0;overflow:hidden;transition:max-height .28s ease;}
+.advanced-panel.show{max-height:320px;}
+.advanced-inner{padding-top:4px;border-top:1px dashed var(--line);margin-top:2px;padding-top:14px;margin-bottom:4px;}
 .brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
 .brand-mark{font-family:var(--mono);font-size:13px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;}
 .brand h1{font-size:22px;margin:2px 0 0;font-weight:650;letter-spacing:-0.01em;}
 .brand h1 span{color:var(--accent);}
-.login-sub{color:var(--dim);font-size:13.5px;margin:6px 0 26px;line-height:1.5;}
+h1{font-size:24px;margin:4px 0 0;font-weight:700;letter-spacing:-0.02em;}
+h1 span{color:var(--accent);}
+.login-sub{color:var(--dim);font-size:13.5px;margin:6px 0 24px;line-height:1.5;}
 .field{margin-bottom:14px;}
 .field label{display:block;font-size:11.5px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);}
 .field input,.field select{
@@ -132,41 +148,51 @@ aside{
 .account-box .status-bad{color:var(--live);}
 .tab-switch{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:3px;}
 .tab-switch button{
-  flex:1;background:transparent;border:none;color:var(--dim);padding:8px 6px;border-radius:7px;font-size:12px;
-  cursor:pointer;font-weight:600;font-family:var(--sans);transition:.15s;
+  flex:1;background:transparent;border:none;color:var(--dim);padding:9px 6px;border-radius:7px;font-size:12px;
+  cursor:pointer;font-weight:600;font-family:var(--sans);transition:.15s;display:flex;align-items:center;justify-content:center;gap:5px;
 }
-.tab-switch button.active{background:var(--accent);color:#04211c;}
+.tab-switch button.active{background:var(--accent);color:#04211c;box-shadow:0 4px 14px -4px rgba(94,234,212,.5);}
 .cat-search{
-  background:#0d1117;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;color:var(--text);
-  outline:none;width:100%;
+  background:#0d1117;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:12.5px;color:var(--text);
+  outline:none;width:100%;transition:border-color .15s;
 }
+.cat-search:focus{border-color:var(--accent);}
 .cat-list{list-style:none;margin:0;padding:0;flex:1;overflow-y:auto;}
 .cat-list li{
   padding:9px 10px;border-radius:8px;font-size:13px;color:var(--dim);cursor:pointer;display:flex;justify-content:space-between;
-  align-items:center;margin-bottom:2px;transition:.12s;
+  align-items:center;margin-bottom:2px;transition:.12s;border-left:2px solid transparent;
 }
 .cat-list li:hover{background:var(--panel2);color:var(--text);}
-.cat-list li.active{background:var(--accent-dim);color:var(--accent);}
+.cat-list li.active{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
 .cat-list li .count{font-family:var(--mono);font-size:10.5px;color:var(--dimmer);}
 .cat-list li.active .count{color:var(--accent);opacity:.8;}
 .side-actions{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px;}
+.side-actions .dropdown{width:100%;}
+.side-actions .dropdown .btn{width:100%;}
+.side-actions .dropdown-menu{width:100%;bottom:calc(100% + 6px);}
 
-main{padding:20px 26px 60px;min-width:0;}
-.top-bar{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+main{padding:0 26px 60px;min-width:0;}
+.content-header{
+  position:sticky;top:0;z-index:30;background:rgba(10,13,18,.85);backdrop-filter:blur(10px);
+  padding:20px 0 14px;margin-bottom:16px;border-bottom:1px solid var(--line);
+}
+.content-header .title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.content-header .title-row h2{font-size:19px;margin:0;display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:-.01em;}
+.content-header .title-row h2 .type-icon{font-size:18px;}
+.content-header .title-row .sub{color:var(--dim);font-size:12px;font-family:var(--mono);font-weight:400;}
+.top-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .search-main{
   flex:1;min-width:220px;background:var(--panel);border:1px solid var(--line);border-radius:10px;
-  padding:11px 14px;color:var(--text);font-size:14px;outline:none;
+  padding:11px 14px;color:var(--text);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;
 }
-.search-main:focus{border-color:var(--accent);}
-.crumb{color:var(--dim);font-size:12.5px;font-family:var(--mono);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
-.crumb b{color:var(--text);font-weight:600;}
+.search-main:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;}
 .card{
-  background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative;
-  display:flex;flex-direction:column;transition:.15s;
+  background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:13px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;transition:transform .18s,border-color .18s,box-shadow .18s;
 }
-.card:hover{border-color:var(--line-bright);transform:translateY(-2px);}
+.card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 16px 30px -14px rgba(0,0,0,.55),0 0 0 1px rgba(94,234,212,.15);}
 .card .thumb{
   width:100%;aspect-ratio:2/3;background:var(--panel2);display:flex;align-items:center;justify-content:center;
   color:var(--dimmer);font-size:11px;overflow:hidden;position:relative;
@@ -280,11 +306,12 @@ main{padding:20px 26px 60px;min-width:0;}
 <!-- ============== LOGIN ============== -->
 <div id="loginScreen">
   <div class="login-card">
-    <div class="brand">
-      <span class="signal-bars"><i></i><i></i><i></i><i></i></span>
-      <div>
+    <div class="brand-row">
+      <div class="brand">
+        <span class="signal-bars"><i></i><i></i><i></i><i></i></span>
         <div class="brand-mark">Painel Xtream</div>
       </div>
+      <button class="gear-btn" onclick="toggleAdvanced()" title="Configurações avançadas">⚙</button>
     </div>
     <h1>Signal <span>Explorer</span></h1>
     <p class="login-sub">Conecte-se a um painel Xtream Codes para navegar, pré-visualizar e exportar todo o catálogo — Live, Filmes e Séries.</p>
@@ -305,14 +332,6 @@ main{padding:20px 26px 60px;min-width:0;}
         <input id="fHost" type="text" placeholder="bmnew26.site">
         <input id="fPort" type="text" placeholder="80" value="80">
       </div>
-      <div class="field-hint">Host sem http:// — porta separada. Use https se o painel exigir.</div>
-    </div>
-    <div class="field">
-      <label>Protocolo</label>
-      <select id="fProto">
-        <option value="http">http</option>
-        <option value="https">https</option>
-      </select>
     </div>
     <div class="field">
       <label>Usuário</label>
@@ -322,11 +341,24 @@ main{padding:20px 26px 60px;min-width:0;}
       <label>Senha</label>
       <input id="fPass" type="text" placeholder="Capoeira2308">
     </div>
-    <div class="field">
-      <label>Proxy CORS personalizado (opcional)</label>
-      <input id="fProxy" type="text" placeholder="https://seu-worker.workers.dev/?url=">
-      <div class="field-hint">Não é obrigatório. Se o painel bloquear requisições do navegador, o app tenta sozinho, em ordem: direto → proxy personalizado (se preenchido) → proxies públicos automáticos. As credenciais passam pelo proxy que for usado — deixe em branco se preferir usar só os automáticos.</div>
+
+    <div id="advancedPanel" class="advanced-panel">
+      <div class="advanced-inner">
+        <div class="field">
+          <label>Protocolo</label>
+          <select id="fProto">
+            <option value="http">http</option>
+            <option value="https">https</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Proxy CORS personalizado</label>
+          <input id="fProxy" type="text" placeholder="https://seu-worker.workers.dev/?url=">
+          <div class="field-hint">Opcional. Se o painel bloquear o navegador (CORS), o app tenta sozinho: direto → este proxy (se preenchido) → 3 proxies públicos automáticos. Credenciais passam pelo proxy usado — não é necessário preencher isto.</div>
+        </div>
+      </div>
     </div>
+
     <div class="field" style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="fSave" style="width:auto;" checked>
       <label style="margin:0;text-transform:none;font-family:var(--sans);font-size:12.5px;color:var(--dim);">Salvar este login neste navegador</label>
@@ -351,35 +383,49 @@ main{padding:20px 26px 60px;min-width:0;}
     <div class="account-box" id="accountBox">conectando…</div>
 
     <div class="tab-switch">
-      <button id="tabLive" class="active" onclick="switchType('live')">Live</button>
-      <button id="tabVod" onclick="switchType('vod')">Filmes</button>
-      <button id="tabSeries" onclick="switchType('series')">Séries</button>
+      <button id="tabLive" class="active" onclick="switchType('live')"><span>📡</span> Live</button>
+      <button id="tabVod" onclick="switchType('vod')"><span>🎬</span> Filmes</button>
+      <button id="tabSeries" onclick="switchType('series')"><span>📺</span> Séries</button>
     </div>
 
     <input class="cat-search" id="catSearch" placeholder="Filtrar categorias…" oninput="renderCategories()">
     <ul class="cat-list" id="catList"></ul>
 
     <div class="side-actions">
-      <button class="btn btn-ghost btn-sm" onclick="loadAllCurrentType()">Carregar todas categorias</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportFullPlaylist()">Exportar playlist completa (M3U)</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadAllCurrentType()">↻ Carregar todas categorias</button>
+      <div class="dropdown">
+        <button class="btn btn-ghost btn-sm" onclick="toggleMenu('exportTabMenu')">⬇ Exportar aba inteira ▾</button>
+        <div class="dropdown-menu" id="exportTabMenu">
+          <button onclick="exportWholeTab('m3u')">M3U</button>
+          <button onclick="exportWholeTab('txt')">TXT (links)</button>
+          <button onclick="exportWholeTab('txt-named')">TXT (nome + link)</button>
+          <button onclick="exportWholeTab('json')">JSON</button>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="exportFullPlaylist()">⬇ Playlist completa da conta</button>
     </div>
   </aside>
 
   <main>
-    <div class="top-bar">
-      <input class="search-main" id="mainSearch" placeholder="Buscar no conteúdo carregado…" oninput="renderGrid()">
-      <div class="dropdown">
-        <button class="btn btn-ghost btn-sm" onclick="toggleMenu('exportAllMenu')">Exportar visíveis ▾</button>
-        <div class="dropdown-menu" id="exportAllMenu">
-          <button onclick="exportItems(currentVisible(), 'm3u')">M3U</button>
-          <button onclick="exportItems(currentVisible(), 'txt')">TXT (links)</button>
-          <button onclick="exportItems(currentVisible(), 'txt-named')">TXT (nome + link)</button>
-          <button onclick="exportItems(currentVisible(), 'json')">JSON</button>
+    <div class="content-header">
+      <div class="title-row">
+        <h2><span class="type-icon" id="crumbIcon">📡</span> <span id="crumbLabel">Live</span> <span class="sub" id="crumbSub">· Todas categorias</span></h2>
+        <span class="sub" id="itemCount"></span>
+      </div>
+      <div class="top-bar">
+        <input class="search-main" id="mainSearch" placeholder="Buscar no conteúdo carregado…" oninput="renderGrid()">
+        <div class="dropdown">
+          <button class="btn btn-ghost btn-sm" onclick="toggleMenu('exportAllMenu')">⬇ Exportar categoria atual ▾</button>
+          <div class="dropdown-menu" id="exportAllMenu">
+            <button onclick="exportItems(currentVisible(), 'm3u')">M3U</button>
+            <button onclick="exportItems(currentVisible(), 'txt')">TXT (links)</button>
+            <button onclick="exportItems(currentVisible(), 'txt-named')">TXT (nome + link)</button>
+            <button onclick="exportItems(currentVisible(), 'json')">JSON</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="crumb" id="crumb">Live · Todas categorias</div>
     <div class="loadbar" id="loadbar"><i></i></div>
 
     <div class="grid" id="grid"></div>
@@ -550,6 +596,11 @@ async function apiGet(action, extra={}, proxyIdx){
   const res = await fetch(apiUrl(action, extra, idx));
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
+}
+
+function toggleAdvanced(){
+  $('advancedPanel').classList.toggle('show');
+  document.querySelector('.gear-btn').classList.toggle('active');
 }
 
 /* ============ Login / parse ============ */
@@ -796,9 +847,16 @@ async function loadAllCurrentType(){
   toast('Catálogo completo carregado');
 }
 
+const TYPE_META = {
+  live:   { icon: '📡', label: 'Live' },
+  vod:    { icon: '🎬', label: 'Filmes' },
+  series: { icon: '📺', label: 'Séries' }
+};
 function updateCrumb(catName){
-  const typeLabel = { live: 'Live', vod: 'Filmes', series: 'Séries' }[currentType];
-  $('crumb').innerHTML = `<b>${typeLabel}</b> · ${currentCatId === null ? 'Todas categorias' : catName}`;
+  const meta = TYPE_META[currentType];
+  $('crumbIcon').textContent = meta.icon;
+  $('crumbLabel').textContent = meta.label;
+  $('crumbSub').textContent = currentCatId === null ? '· Todas categorias' : '· ' + catName;
 }
 
 /* ============ Grid rendering ============ */
@@ -820,6 +878,7 @@ function renderGrid(){
   const items = currentVisible();
   const grid = $('grid');
   $('emptyState').style.display = items.length ? 'none' : 'block';
+  $('itemCount').textContent = items.length ? `${items.length} itens` : '';
   grid.innerHTML = '';
 
   items.forEach(it => {
@@ -1053,7 +1112,13 @@ function resolveExportUrl(it){
   if(it.__type === 'live') return streamUrl('live', it.stream_id, 'ts');
   if(it.__type === 'vod') return streamUrl('vod', it.stream_id, it.container_extension || 'mp4');
   if(it.__type === 'series-ep') return streamUrl('series', it.stream_id, it.container_extension || 'mp4');
-  return itemUrl(it);
+  return null; // 'series' (a container, not a stream) is expanded separately — see expandForExport
+}
+function catNameFor(it){
+  return (categories[it.__type] || []).find(c => c.category_id === it.category_id)?.category_name || '';
+}
+function m3uEsc(s){
+  return String(s || '').replace(/[\r\n]+/g, ' ').replace(/"/g, "'").trim();
 }
 function downloadFile(filename, content, mime='text/plain'){
   const blob = new Blob([content], { type: mime + ';charset=utf-8' });
@@ -1063,27 +1128,96 @@ function downloadFile(filename, content, mime='text/plain'){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
 }
-function exportItems(items, format){
-  if(!items.length){ toast('Nada para exportar.'); return; }
-  const withUrls = items.map(it => ({
-    name: it.name || it.title || 'Sem título',
-    url: resolveExportUrl(it.__type ? it : { ...it, __type: currentType }),
-    category: (categories[it.__type || currentType] || []).find(c => c.category_id === it.category_id)?.category_name || ''
-  })).filter(x => x.url);
 
+// Expands raw selection/list into flat {name,url,category,logo} entries.
+// Series containers get resolved into every episode via get_series_info — this is the
+// step that was previously missing, which is why series silently produced empty exports.
+async function expandForExport(items, onProgress){
+  const out = [];
+  const seriesItems = items.filter(raw => (raw.__type || currentType) === 'series');
+  let seriesDone = 0;
+  for(const raw of items){
+    const it = raw.__type ? raw : { ...raw, __type: currentType };
+    if(it.__type === 'series'){
+      try{
+        const info = await apiGet('get_series_info', { series_id: it.series_id });
+        const episodes = info.episodes || {};
+        const catName = catNameFor(it);
+        Object.keys(episodes).sort((a,b)=>Number(a)-Number(b)).forEach(sNum => {
+          episodes[sNum].forEach(ep => {
+            out.push({
+              name: `${it.name || it.title} - S${sNum}E${ep.episode_num}${ep.title ? ' - ' + ep.title : ''}`,
+              url: streamUrl('series', ep.id, ep.container_extension || 'mp4'),
+              category: catName,
+              logo: it.cover || it.movie_image || ''
+            });
+          });
+        });
+      }catch(e){
+        console.error('Falha ao expandir série:', it.name, e);
+      }
+      seriesDone++;
+      if(onProgress && seriesItems.length > 3) onProgress(seriesDone, seriesItems.length);
+    } else {
+      const url = resolveExportUrl(it);
+      if(url){
+        out.push({
+          name: it.name || it.title || 'Sem título',
+          url,
+          category: catNameFor(it),
+          logo: it.stream_icon || it.cover || it.movie_image || ''
+        });
+      }
+    }
+  }
+  return out;
+}
+
+function buildExportContent(withUrls, format){
   if(format === 'm3u'){
     let out = '#EXTM3U\n';
-    withUrls.forEach(x => { out += `#EXTINF:-1 group-title="${x.category}",${x.name}\n${x.url}\n`; });
-    downloadFile('signal-export.m3u', out, 'audio/x-mpegurl');
-  } else if(format === 'txt'){
-    downloadFile('signal-export.txt', withUrls.map(x=>x.url).join('\n'));
-  } else if(format === 'txt-named'){
-    downloadFile('signal-export.txt', withUrls.map(x=>`${x.name} - ${x.url}`).join('\n'));
-  } else if(format === 'json'){
-    downloadFile('signal-export.json', JSON.stringify(withUrls, null, 2), 'application/json');
+    withUrls.forEach(x => {
+      out += `#EXTINF:-1 tvg-name="${m3uEsc(x.name)}" tvg-logo="${m3uEsc(x.logo)}" group-title="${m3uEsc(x.category)}",${m3uEsc(x.name)}\n${x.url}\n`;
+    });
+    return { content: out, filename: 'signal-export.m3u', mime: 'audio/x-mpegurl' };
   }
-  toast(`Exportado ${withUrls.length} itens (${format.toUpperCase()})`);
+  if(format === 'txt'){
+    return { content: withUrls.map(x=>x.url).join('\n'), filename: 'signal-export.txt', mime: 'text/plain' };
+  }
+  if(format === 'txt-named'){
+    return { content: withUrls.map(x=>`${x.name} - ${x.url}`).join('\n'), filename: 'signal-export.txt', mime: 'text/plain' };
+  }
+  if(format === 'json'){
+    return { content: JSON.stringify(withUrls, null, 2), filename: 'signal-export.json', mime: 'application/json' };
+  }
+}
+
+async function exportItems(items, format){
+  if(!items.length){ toast('Nada para exportar.'); return; }
   document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('show'));
+  setLoading(true);
+  const withUrls = await expandForExport(items, (done, total) => toast(`Expandindo séries… ${done}/${total}`));
+  setLoading(false);
+  if(!withUrls.length){ toast('Nenhum link pôde ser resolvido a partir da seleção.'); return; }
+  const { content, filename, mime } = buildExportContent(withUrls, format);
+  downloadFile(filename, content, mime);
+  toast(`Exportado ${withUrls.length} itens (${format.toUpperCase()})`);
+}
+
+// Exports every loaded item of the current tab (Live / Filmes / Séries), loading
+// any not-yet-fetched categories first.
+async function exportWholeTab(format){
+  document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('show'));
+  const list = categories[currentType] || [];
+  if(!list.length){ toast('Nenhuma categoria disponível.'); return; }
+  const missing = list.filter(c => !streamsByCat[currentType][c.category_id]);
+  if(missing.length) await loadAllCurrentType();
+  const items = allLoadedForType();
+  if(currentType === 'series' && items.length > 15){
+    const ok = window.confirm(`Isso vai buscar os episódios de ${items.length} séries, uma por vez — pode levar um tempo. Continuar?`);
+    if(!ok) return;
+  }
+  exportItems(items, format);
 }
 
 async function exportFullPlaylist(){
