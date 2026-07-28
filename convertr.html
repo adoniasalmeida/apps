@@ -471,7 +471,7 @@ input[type=color] {
 /* ── Quality slider ── */
 .quality-wrap { display: flex; gap: 10px; align-items: center; }
 input[type=range] {
-  flex: 1; -webkit-appearance: none;
+  flex: 1; -webkit-appearance: none; appearance: none;
   height: 3px;
   background: linear-gradient(90deg, var(--cyan) var(--pct,82%), var(--border-h) var(--pct,82%));
   border-radius: 3px; outline: none;
@@ -582,7 +582,6 @@ button:disabled::before { display: none; }
   margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
 }
 
-.count-wrap {}
 .count-num {
   font-family: 'Syne', sans-serif;
   font-size: 2.4rem; font-weight: 800; line-height: 1;
