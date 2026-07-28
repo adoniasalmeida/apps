@@ -399,7 +399,8 @@ input[type=file]{display:none}
       <button class="btn btn-ghost btn-sm" onclick="bulkClearLogo()">✕Logo</button>
       <button class="btn btn-ghost btn-sm" onclick="bulkClearEpg()">✕EPG</button>
       <button class="btn btn-vio btn-sm" onclick="doAutoFillSelected()">✦Auto</button>
-      <button class="btn btn-ghost btn-sm" onclick="invertSel()">⇄</button>
+      <button class="btn btn-ghost btn-sm" onclick="selectAllVisible()" title="Seleciona todos os canais visíveis (respeitando a busca)">☑ Tudo</button>
+      <button class="btn btn-ghost btn-sm" onclick="invertSel()" title="Inverte a seleção atual">⇄ Inverter</button>
       <button class="btn btn-red btn-sm" onclick="deleteSelected()">🗑</button>
       <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="clearSel()">✕ Sair</button>
     </div>
@@ -444,8 +445,8 @@ input[type=file]{display:none}
           <span class="lpi-dot"></span><span class="lpi-name">Logo - Gitgub</span><span class="lpi-sub">Clique para baixar logo</span>
           <button class="lpi-btn" onclick="loadPresetJSON(this.parentElement)">⬇</button>
         </div>
-        <div class="logo-preset-item" data-url="https://raw.githubusercontent.com/adoniasalmeida/m3u/refs/heads/main/logo/logos_frostview.json" data-label="Logo 2 — (configure a URL)">
-          <span class="lpi-dot"></span><span class="lpi-name">Logo - FrostView</span><span class="lpi-sub">Clique para baixar logo</span>
+        <div class="logo-preset-item" data-url="" data-label="Logo 2 — (configure a URL)">
+          <span class="lpi-dot"></span><span class="lpi-name">Logo - 2</span><span class="lpi-sub">Clique para baixar logo</span>
           <button class="lpi-btn" onclick="loadPresetJSON(this.parentElement)">⬇</button>
         </div>
         <div class="logo-preset-item" data-url="" data-label="Logo 3 — (configure a URL)">
@@ -542,6 +543,7 @@ input[type=file]{display:none}
 // ═══════════════════════════════════════════
 var channels=[], groups=[], LOGOS={}, EPG={}, epgUrls=[];
 var selMode=false, selSet=new Set(), activeIdx=null;
+var collapsedGroups=new Set(); // grupos fechados manualmente — precisa sobreviver a renderAll()
 var _bulkType='', chDragI=-1, dgSrc=-1;
 
 // ═══════════════════════════════════════════
@@ -948,12 +950,14 @@ function renderChannels(filter){
     hdr.appendChild(selBtn); hdr.appendChild(sortBtn);
 
     var body=mk('div','grp-body');
+    if(collapsedGroups.has(g)){ body.classList.add('hidden'); tog.style.transform='rotate(-90deg)'; }
     chs.forEach(function(ch){ body.appendChild(buildChRow(ch)); });
 
     hdr.addEventListener('click',function(e){
       if(e.target.tagName==='BUTTON') return;
-      body.classList.toggle('hidden');
-      tog.style.transform=body.classList.contains('hidden')?'rotate(-90deg)':'';
+      if(collapsedGroups.has(g)) collapsedGroups.delete(g); else collapsedGroups.add(g);
+      body.classList.toggle('hidden',collapsedGroups.has(g));
+      tog.style.transform=collapsedGroups.has(g)?'rotate(-90deg)':'';
     });
 
     // Allow dropping channels onto group header
@@ -1055,6 +1059,25 @@ function toggleSel(i){
     r.classList.toggle('selected',selSet.has(i));
     var cb=r.querySelector('input[type=checkbox]'); if(cb) cb.checked=selSet.has(i);
   });
+}
+
+// Seleciona TODOS os canais visíveis de uma vez (respeita a busca ativa) —
+// diferente de invertSel(), que alterna cada canal individualmente.
+function selectAllVisible(){
+  if(!selMode) toggleSelMode();
+  var filter=(qs('search-in')?qs('search-in').value:'').toLowerCase();
+  var added=0;
+  channels.forEach(function(ch,i){
+    var vis=!filter||ch.name.toLowerCase().indexOf(filter)>=0||(ch.id||'').toLowerCase().indexOf(filter)>=0;
+    if(vis && !selSet.has(i)){ selSet.add(i); added++; }
+  });
+  setText('sel-count',selSet.size+' sel.');
+  document.querySelectorAll('.ch-row').forEach(function(r){
+    var idx=parseInt(r.dataset.idx); if(isNaN(idx)) return;
+    r.classList.toggle('selected',selSet.has(idx));
+    var cb=r.querySelector('input[type=checkbox]'); if(cb) cb.checked=selSet.has(idx);
+  });
+  toast(selSet.size+' canais selecionados','suc');
 }
 
 function selGroup(g,visibleChs){
@@ -1795,7 +1818,7 @@ function newProject(){
   // Reset paste area
   var pa=qs('paste-area'); if(pa) pa.value='';
   // Clear sel mode
-  selMode=false; selSet.clear();
+  selMode=false; selSet.clear(); collapsedGroups.clear();
   var sb=qs('sel-bar'); if(sb) sb.classList.remove('on');
   var stb=qs('sel-toggle-btn'); if(stb) stb.textContent='☑ Selecionar';
   renderAll(); renderEPGUrlList(); persist();
