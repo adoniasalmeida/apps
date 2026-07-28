@@ -120,6 +120,7 @@ h1 span{color:var(--accent);}
 .err-box.show{display:block;}
 .saved-profiles{margin-top:18px;border-top:1px solid var(--line);padding-top:16px;}
 .saved-profiles h4{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin:0 0 10px;}
+.dropdown-menu.down{bottom:auto;top:calc(100% + 6px);}
 .profile-chip{
   display:flex;align-items:center;justify-content:space-between;background:#0d1117;border:1px solid var(--line);
   border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12.5px;cursor:pointer;
@@ -181,43 +182,117 @@ main{padding:0 26px 60px;min-width:0;}
 .content-header .title-row h2 .type-icon{font-size:18px;}
 .content-header .title-row .sub{color:var(--dim);font-size:12px;font-family:var(--mono);font-weight:400;}
 .top-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.search-wrap{flex:1;min-width:220px;position:relative;display:flex;align-items:center;}
+.search-wrap .sicon{position:absolute;left:13px;font-size:13px;color:var(--dimmer);pointer-events:none;}
 .search-main{
-  flex:1;min-width:220px;background:var(--panel);border:1px solid var(--line);border-radius:10px;
-  padding:11px 14px;color:var(--text);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:11px 34px 11px 34px;color:var(--text);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;
 }
 .search-main:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
+.search-wrap .skey{
+  position:absolute;right:9px;font-family:var(--mono);font-size:10px;color:var(--dimmer);
+  border:1px solid var(--line-bright);border-radius:4px;padding:2px 6px;pointer-events:none;transition:.15s;
+}
+.search-wrap .sclear{
+  position:absolute;right:8px;width:20px;height:20px;border-radius:50%;background:var(--panel2);color:var(--dim);
+  border:1px solid var(--line);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:11px;
+}
+.search-wrap.has-val .skey{display:none;}
+.search-wrap.has-val .sclear{display:flex;}
+
+.density-toggle{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:3px;}
+.density-toggle button{
+  background:transparent;border:none;color:var(--dim);width:30px;height:30px;border-radius:6px;cursor:pointer;
+  font-size:12px;transition:.15s;display:flex;align-items:center;justify-content:center;
+}
+.density-toggle button.active{background:var(--accent-dim);color:var(--accent);}
+
+.sort-select{
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;color:var(--dim);font-size:12px;
+  padding:0 10px;height:36px;font-family:var(--sans);cursor:pointer;outline:none;
+}
+.sort-select:focus{border-color:var(--accent);}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;}
+.grid.compact{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
+.grid.comfy{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px;}
+
+/* Skeleton shimmer while poster art loads */
+.skel{background:linear-gradient(100deg,var(--panel2) 30%,#1d2531 45%,var(--panel2) 60%);background-size:250% 100%;animation:shimmer 1.4s ease-in-out infinite;}
+@keyframes shimmer{0%{background-position:120% 0;}100%{background-position:-20% 0;}}
+
 .card{
-  background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:13px;overflow:hidden;position:relative;
-  display:flex;flex-direction:column;transition:transform .18s,border-color .18s,box-shadow .18s;
+  background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .18s,box-shadow .22s;
+  opacity:0;transform:translateY(10px) scale(.98);animation:card-in .38s ease forwards;
+  animation-delay:calc(var(--i,0) * 22ms);
 }
-.card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 16px 30px -14px rgba(0,0,0,.55),0 0 0 1px rgba(94,234,212,.15);}
+@keyframes card-in{to{opacity:1;transform:translateY(0) scale(1);}}
+.card:hover{border-color:var(--accent);transform:translateY(-5px) scale(1.015);box-shadow:0 20px 38px -16px rgba(0,0,0,.6),0 0 0 1px rgba(94,234,212,.18);z-index:3;}
+
 .card .thumb{
   width:100%;aspect-ratio:2/3;background:var(--panel2);display:flex;align-items:center;justify-content:center;
   color:var(--dimmer);font-size:11px;overflow:hidden;position:relative;
 }
 .card.live .thumb{aspect-ratio:16/9;}
-.card .thumb img{width:100%;height:100%;object-fit:cover;}
-.card .check{
-  position:absolute;top:8px;left:8px;width:20px;height:20px;border-radius:5px;background:rgba(10,13,18,.7);
-  border:1px solid var(--line-bright);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;
+.card .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease,filter .3s ease;}
+.card:hover .thumb img{transform:scale(1.08);filter:brightness(.55);}
+
+/* Gradient scrim + baked-in title, always legible, no separate body block */
+.card .scrim{
+  position:absolute;left:0;right:0;bottom:0;padding:26px 10px 9px;
+  background:linear-gradient(180deg,transparent,rgba(6,8,11,.55) 45%,rgba(6,8,11,.95));
+  pointer-events:none;z-index:1;
 }
+.card .title{font-size:12.5px;font-weight:600;line-height:1.35;color:#fff;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+.card .cat-tag{font-size:9.5px;color:var(--accent);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-top:3px;opacity:.85;}
+
+.card .check{
+  position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:6px;background:rgba(10,13,18,.65);
+  backdrop-filter:blur(4px);border:1px solid var(--line-bright);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;
+  transition:.15s;
+}
+.card .check:hover{border-color:var(--accent);}
 .card .check.checked{background:var(--accent);border-color:var(--accent);color:#04211c;font-weight:700;font-size:12px;}
+.card.selected{box-shadow:0 0 0 2px var(--accent),0 20px 38px -16px rgba(0,0,0,.6);}
 .card .live-badge{
   position:absolute;top:8px;right:8px;background:rgba(10,13,18,.75);border-radius:5px;padding:3px 7px;
-  font-size:9.5px;font-family:var(--mono);display:flex;align-items:center;gap:4px;color:#fca5b1;z-index:2;
+  font-size:9.5px;font-family:var(--mono);display:flex;align-items:center;gap:4px;color:#fca5b1;z-index:3;
 }
-.card .body{padding:10px 11px 11px;display:flex;flex-direction:column;gap:8px;flex:1;}
-.card .title{font-size:12.5px;font-weight:600;line-height:1.35;color:var(--text);
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px;}
-.card .cat-tag{font-size:10px;color:var(--dimmer);font-family:var(--mono);text-transform:uppercase;letter-spacing:.03em;}
-.card .actions{display:flex;gap:6px;margin-top:auto;}
+
+/* Hover-reveal action rail — replaces the always-on button row */
+.card .actions{
+  position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;justify-content:center;gap:8px;
+  opacity:0;transition:opacity .18s;pointer-events:none;
+}
+.card:hover .actions{opacity:1;pointer-events:auto;}
 .icon-btn{
-  flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px;font-size:11px;
-  color:var(--dim);cursor:pointer;text-align:center;transition:.12s;
+  width:38px;height:38px;border-radius:50%;background:rgba(10,13,18,.55);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.18);font-size:14px;color:#fff;cursor:pointer;text-align:center;
+  display:flex;align-items:center;justify-content:center;transition:.15s;transform:translateY(6px);
 }
-.icon-btn:hover{border-color:var(--accent);color:var(--accent);}
+.card:hover .icon-btn{transform:translateY(0);}
+.icon-btn:hover{border-color:var(--accent);background:var(--accent);color:#04211c;transform:translateY(0) scale(1.08);}
+.icon-btn.wide{width:auto;height:34px;padding:0 14px;border-radius:17px;font-size:11.5px;gap:6px;font-weight:600;}
+
+/* Skeleton cards — shown while a category is fetching, before any real data exists */
+.skel-card{border-radius:13px;overflow:hidden;border:1px solid var(--line);}
+.skel-card .skel{width:100%;aspect-ratio:2/3;}
+.skel-card.live .skel{aspect-ratio:16/9;}
+
+.badges-row{position:absolute;top:8px;right:8px;z-index:3;display:flex;gap:4px;align-items:center;}
+.badges-row .live-badge{position:static;}
+.quality-badge{
+  background:rgba(10,13,18,.75);border-radius:5px;padding:3px 7px;font-size:9px;font-family:var(--mono);
+  font-weight:700;letter-spacing:.02em;color:var(--accent);
+}
+.quality-badge.q4k{color:var(--violet);}
+
+.search-hint{font-size:11px;color:var(--dimmer);margin-top:8px;font-family:var(--mono);}
+.search-hint b{color:var(--dim);}
+
+.load-more-wrap{display:flex;justify-content:center;padding:24px 0 8px;}
 
 .empty-state{
   text-align:center;padding:80px 20px;color:var(--dimmer);
@@ -316,6 +391,13 @@ main{padding:0 26px 60px;min-width:0;}
     <h1>Signal <span>Explorer</span></h1>
     <p class="login-sub">Conecte-se a um painel Xtream Codes para navegar, pré-visualizar e exportar todo o catálogo — Live, Filmes e Séries.</p>
 
+    <div class="dropdown" id="savedProfiles" style="display:none;margin-bottom:16px;">
+      <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:space-between;" onclick="toggleMenu('profileList')">
+        <span>🕘 Logins salvos</span><span id="profileCountTag" style="font-family:var(--mono);color:var(--dimmer);"></span>
+      </button>
+      <div class="dropdown-menu down" id="profileList" style="width:100%;max-height:240px;overflow-y:auto;"></div>
+    </div>
+
     <div class="parse-box">
       <label>Colar URL de stream de exemplo (auto-preenche)</label>
       <div class="prow">
@@ -365,11 +447,6 @@ main{padding:0 26px 60px;min-width:0;}
     </div>
 
     <button class="btn btn-primary" id="btnConnect" onclick="connect()">Conectar e explorar</button>
-
-    <div class="saved-profiles" id="savedProfiles" style="display:none;">
-      <h4>Logins salvos</h4>
-      <div id="profileList"></div>
-    </div>
   </div>
 </div>
 
@@ -397,8 +474,6 @@ main{padding:0 26px 60px;min-width:0;}
         <button class="btn btn-ghost btn-sm" onclick="toggleMenu('exportTabMenu')">⬇ Exportar aba inteira ▾</button>
         <div class="dropdown-menu" id="exportTabMenu">
           <button onclick="exportWholeTab('m3u')">M3U</button>
-          <button onclick="exportWholeTab('txt')">TXT (links)</button>
-          <button onclick="exportWholeTab('txt-named')">TXT (nome + link)</button>
           <button onclick="exportWholeTab('json')">JSON</button>
         </div>
       </div>
@@ -413,22 +488,40 @@ main{padding:0 26px 60px;min-width:0;}
         <span class="sub" id="itemCount"></span>
       </div>
       <div class="top-bar">
-        <input class="search-main" id="mainSearch" placeholder="Buscar no conteúdo carregado…" oninput="renderGrid()">
+        <div class="search-wrap" id="searchWrap">
+          <span class="sicon">⌕</span>
+          <input class="search-main" id="mainSearch" placeholder="Buscar no conteúdo carregado…" oninput="onSearchInput()" aria-label="Buscar no conteúdo carregado">
+          <span class="skey">/</span>
+          <span class="sclear" onclick="clearSearch()" role="button" aria-label="Limpar busca">✕</span>
+        </div>
+        <select class="sort-select" id="sortSelect" onchange="onSortChange()" aria-label="Ordenar resultados">
+          <option value="default">Ordem original</option>
+          <option value="az">Nome A→Z</option>
+          <option value="za">Nome Z→A</option>
+        </select>
+        <div class="density-toggle" title="Densidade do grid">
+          <button id="densCompact" onclick="setDensity('compact')" aria-label="Grid compacto">▦</button>
+          <button id="densNormal" class="active" onclick="setDensity('normal')" aria-label="Grid normal">▤</button>
+          <button id="densComfy" onclick="setDensity('comfy')" aria-label="Grid confortável">▥</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="selectAllVisible()" title="Seleciona tudo que está filtrado/visível agora">☑ Selecionar visíveis</button>
         <div class="dropdown">
           <button class="btn btn-ghost btn-sm" onclick="toggleMenu('exportAllMenu')">⬇ Exportar categoria atual ▾</button>
           <div class="dropdown-menu" id="exportAllMenu">
             <button onclick="exportItems(currentVisible(), 'm3u')">M3U</button>
-            <button onclick="exportItems(currentVisible(), 'txt')">TXT (links)</button>
-            <button onclick="exportItems(currentVisible(), 'txt-named')">TXT (nome + link)</button>
             <button onclick="exportItems(currentVisible(), 'json')">JSON</button>
           </div>
         </div>
       </div>
+      <div class="search-hint" id="searchHint"></div>
     </div>
 
     <div class="loadbar" id="loadbar"><i></i></div>
 
     <div class="grid" id="grid"></div>
+    <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
+      <button class="btn btn-ghost btn-sm" id="btnLoadMore" onclick="showMore()"></button>
+    </div>
     <div class="empty-state" id="emptyState" style="display:none;">
       <div class="glyph">▢</div>
       <p>Nada aqui ainda. Escolha uma categoria à esquerda ou clique em "Carregar todas categorias" para trazer tudo de uma vez.</p>
@@ -444,8 +537,6 @@ main{padding:0 26px 60px;min-width:0;}
     <button class="btn btn-ghost btn-sm" onclick="toggleMenu('exportSelMenu')">Exportar seleção ▾</button>
     <div class="dropdown-menu" id="exportSelMenu">
       <button onclick="exportItems(getSelectedItems(), 'm3u')">M3U</button>
-      <button onclick="exportItems(getSelectedItems(), 'txt')">TXT (links)</button>
-      <button onclick="exportItems(getSelectedItems(), 'txt-named')">TXT (nome + link)</button>
       <button onclick="exportItems(getSelectedItems(), 'json')">JSON</button>
     </div>
   </div>
@@ -457,7 +548,7 @@ main{padding:0 26px 60px;min-width:0;}
   <div class="modal">
     <div class="modal-head">
       <h3 id="seriesModalTitle">Série</h3>
-      <span class="modal-close" onclick="closeModal('seriesModal')">×</span>
+      <span class="modal-close" onclick="closeModal('seriesModal')" role="button" aria-label="Fechar">×</span>
     </div>
     <div class="modal-body" id="seriesModalBody">carregando…</div>
     <div class="modal-foot">
@@ -472,23 +563,21 @@ main{padding:0 26px 60px;min-width:0;}
   <div class="modal">
     <div class="modal-head">
       <h3 id="previewTitle">Pré-visualizar</h3>
-      <span class="modal-close" onclick="closePreview()">×</span>
+      <span class="modal-close" onclick="closePreview()" role="button" aria-label="Fechar">×</span>
     </div>
     <div class="modal-body">
       <video id="previewVideo" controls playsinline></video>
       <div class="preview-url" id="previewUrl"></div>
       <div class="preview-status" id="previewStatus"></div>
       <div class="preview-tools">
-        <button class="btn btn-ghost btn-sm" onclick="tryPreviewExt('m3u8')">Tentar .m3u8</button>
-        <button class="btn btn-ghost btn-sm" onclick="tryPreviewExt('ts')">Tentar .ts</button>
         <button class="btn btn-ghost btn-sm" id="btnProxyToggle" onclick="toggleMediaProxy()">⚡ Proxy: desligado</button>
-        <button class="btn btn-ghost btn-sm" onclick="window.open(currentPreviewUrl,'_blank')">Abrir em nova guia</button>
-        <a class="btn btn-ghost btn-sm" id="previewDownload" download>Baixar arquivo</a>
+        <button class="btn btn-ghost btn-sm" onclick="window.open(currentPreviewUrl,'_blank')">↗ Abrir em nova guia</button>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost btn-sm" onclick="copyText(currentPreviewUrl)">Copiar link</button>
-      <button class="btn btn-primary btn-sm" onclick="closePreview()">Fechar</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyText(currentPreviewUrl)">🔗 Copiar link</button>
+      <a class="btn btn-primary btn-sm" id="previewDownload" download>⬇ Baixar arquivo</a>
+      <button class="btn btn-ghost btn-sm" onclick="closePreview()">Fechar</button>
     </div>
   </div>
 </div>
@@ -639,8 +728,8 @@ function saveProfile(c){
 }
 function loadProfiles(){
   const list = JSON.parse(localStorage.getItem('xtream_profiles') || '[]');
-  if(!list.length) return;
-  $('savedProfiles').style.display = 'block';
+  $('savedProfiles').style.display = list.length ? 'block' : 'none';
+  $('profileCountTag').textContent = list.length ? `(${list.length})` : '';
   const wrap = $('profileList'); wrap.innerHTML = '';
   list.forEach((p, i) => {
     const el = document.createElement('div');
@@ -654,14 +743,13 @@ function fillProfile(i){
   const p = window._profiles[i];
   $('fProto').value = p.proto; $('fHost').value = p.host; $('fPort').value = p.port;
   $('fUser').value = p.user; $('fPass').value = p.pass; $('fProxy').value = p.customProxy || '';
+  $('profileList').classList.remove('show');
 }
 function removeProfile(i){
   const list = JSON.parse(localStorage.getItem('xtream_profiles') || '[]');
   list.splice(i,1);
   localStorage.setItem('xtream_profiles', JSON.stringify(list));
   loadProfiles();
-  $('profileList').innerHTML='';
-  if(list.length===0) $('savedProfiles').style.display='none'; else loadProfiles();
 }
 
 async function connect(){
@@ -773,6 +861,7 @@ function setLoading(on){
 function switchType(type){
   currentType = type;
   currentCatId = null;
+  visibleCount = PAGE_SIZE;
   ['tabLive','tabVod','tabSeries'].forEach(id => $(id).classList.remove('active'));
   $('tab' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
   renderCategories();
@@ -789,7 +878,7 @@ function renderCategories(){
   allLi.className = currentCatId === null ? 'active' : '';
   const totalLoaded = Object.values(streamsByCat[currentType]).reduce((a,arr)=>a+arr.length,0);
   allLi.innerHTML = `<span>Todas categorias</span><span class="count">${totalLoaded}</span>`;
-  allLi.onclick = () => { currentCatId = null; renderCategories(); renderGrid(); updateCrumb(); };
+  allLi.onclick = () => { currentCatId = null; visibleCount = PAGE_SIZE; renderCategories(); renderGrid(); updateCrumb(); };
   ul.appendChild(allLi);
 
   list.filter(c => c.category_name.toLowerCase().includes(filter)).forEach(c => {
@@ -802,11 +891,29 @@ function renderCategories(){
   });
 }
 
+// Fills the grid with placeholder shimmer cards so a category switch never
+// shows a blank screen while the request is in flight.
+function renderSkeletonGrid(count){
+  const grid = $('grid');
+  $('emptyState').style.display = 'none';
+  $('loadMoreWrap').style.display = 'none';
+  grid.innerHTML = '';
+  const isLive = currentType === 'live';
+  for(let i = 0; i < count; i++){
+    const el = document.createElement('div');
+    el.className = 'skel-card' + (isLive ? ' live' : '');
+    el.innerHTML = `<div class="skel"></div>`;
+    grid.appendChild(el);
+  }
+}
+
 async function selectCategory(catId, catName){
   currentCatId = catId;
+  visibleCount = PAGE_SIZE;
   renderCategories();
   updateCrumb(catName);
   if(!streamsByCat[currentType][catId]){
+    renderSkeletonGrid(12);
     setLoading(true);
     try{
       const action = currentType === 'live' ? 'get_live_streams' : (currentType === 'vod' ? 'get_vod_streams' : 'get_series');
@@ -825,6 +932,9 @@ async function selectCategory(catId, catName){
 async function loadAllCurrentType(){
   const list = categories[currentType] || [];
   if(!list.length){ toast('Nenhuma categoria disponível.'); return; }
+  currentCatId = null;
+  visibleCount = PAGE_SIZE;
+  renderSkeletonGrid(12);
   setLoading(true);
   const action = currentType === 'live' ? 'get_live_streams' : (currentType === 'vod' ? 'get_vod_streams' : 'get_series');
   let done = 0;
@@ -841,7 +951,6 @@ async function loadAllCurrentType(){
     if(done % 3 === 0) toast(`Carregando… ${done}/${list.length} categorias`);
   }
   setLoading(false);
-  currentCatId = null;
   renderCategories();
   renderGrid();
   toast('Catálogo completo carregado');
@@ -863,61 +972,162 @@ function updateCrumb(catName){
 function allLoadedForType(){
   return Object.values(streamsByCat[currentType]).flat();
 }
+let gridDensity = 'normal';
+let sortMode = 'default';
+const PAGE_SIZE = 60;
+let visibleCount = PAGE_SIZE;
+
 function currentVisible(){
   const source = currentCatId === null ? allLoadedForType() : (streamsByCat[currentType][currentCatId] || []);
   const q = $('mainSearch').value.toLowerCase();
-  if(!q) return source;
-  return source.filter(it => (it.name || it.title || '').toLowerCase().includes(q));
+  let list = q ? source.filter(it => (it.name || it.title || '').toLowerCase().includes(q)) : source.slice();
+  if(sortMode === 'az') list.sort((a,b) => (a.name||a.title||'').localeCompare(b.name||b.title||''));
+  if(sortMode === 'za') list.sort((a,b) => (b.name||b.title||'').localeCompare(a.name||a.title||''));
+  return list;
 }
+
+function onSearchInput(){
+  $('searchWrap').classList.toggle('has-val', !!$('mainSearch').value);
+  visibleCount = PAGE_SIZE;
+  renderGrid();
+}
+function clearSearch(){
+  $('mainSearch').value = '';
+  $('searchWrap').classList.remove('has-val');
+  $('mainSearch').focus();
+  visibleCount = PAGE_SIZE;
+  renderGrid();
+}
+function onSortChange(){
+  sortMode = $('sortSelect').value;
+  visibleCount = PAGE_SIZE;
+  renderGrid();
+}
+function setDensity(mode){
+  gridDensity = mode;
+  $('grid').classList.remove('compact','comfy');
+  if(mode !== 'normal') $('grid').classList.add(mode);
+  ['densCompact','densNormal','densComfy'].forEach(id => $(id).classList.remove('active'));
+  $({compact:'densCompact',normal:'densNormal',comfy:'densComfy'}[mode]).classList.add('active');
+}
+function showMore(){
+  visibleCount += PAGE_SIZE;
+  renderGrid();
+}
+// "/" focuses search from anywhere, unless already typing in a field
+document.addEventListener('keydown', (e) => {
+  if(e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT'){
+    e.preventDefault();
+    const el = $('mainSearch');
+    if(el) el.focus();
+  }
+  if(e.key === 'Escape' && document.activeElement === $('mainSearch')){
+    clearSearch();
+  }
+});
 
 function itemKey(it){
   return `${currentType}:${it.stream_id ?? it.series_id}`;
 }
 
-function renderGrid(){
-  const items = currentVisible();
-  const grid = $('grid');
-  $('emptyState').style.display = items.length ? 'none' : 'block';
-  $('itemCount').textContent = items.length ? `${items.length} itens` : '';
-  grid.innerHTML = '';
+// Picks the highest-priority quality tag already embedded in the stream name,
+// so results are scannable without opening each one.
+function extractQuality(name){
+  const s = (name || '').toUpperCase();
+  if(/\b4K|UHD\b/.test(s)) return '4K';
+  if(/\bFHD|FULL ?HD\b/.test(s)) return 'FHD';
+  if(/\bHD\b/.test(s)) return 'HD';
+  if(/\bSD\b/.test(s)) return 'SD';
+  return null;
+}
 
+// Lets the search bar hint the person when they're only searching what's
+// been fetched so far, not the whole account.
+function updateSearchHint(totalItems){
+  const hintEl = $('searchHint');
+  const list = categories[currentType] || [];
+  const loadedCats = list.filter(c => streamsByCat[currentType][c.category_id]).length;
+  if(!list.length){ hintEl.textContent = ''; return; }
+  if(loadedCats < list.length){
+    hintEl.innerHTML = `Busca cobre só o que já foi carregado: <b>${loadedCats}/${list.length}</b> categorias. Use "Carregar todas categorias" para buscar na conta inteira.`;
+  } else {
+    hintEl.textContent = '';
+  }
+}
+
+function selectAllVisible(){
+  const items = currentVisible();
+  if(!items.length){ toast('Nada visível para selecionar.'); return; }
   items.forEach(it => {
     const key = itemKey(it);
-    const id = it.stream_id ?? it.series_id;
+    if(!selected.has(key)) selected.set(key, { ...it, __type: currentType });
+  });
+  renderGrid();
+  updateSelBar();
+  toast(`${items.length} itens visíveis selecionados`);
+}
+
+function renderGrid(){
+  const all = currentVisible();
+  const items = all.slice(0, visibleCount);
+  const grid = $('grid');
+  $('emptyState').style.display = all.length ? 'none' : 'block';
+  $('itemCount').textContent = all.length ? `${all.length} itens` : '';
+  updateSearchHint(all.length);
+  grid.innerHTML = '';
+
+  items.forEach((it, i) => {
+    const key = itemKey(it);
     const name = it.name || it.title || 'Sem título';
     const icon = it.stream_icon || it.cover || it.movie_image || '';
     const catObj = (categories[currentType] || []).find(c => c.category_id === it.category_id);
     const catName = catObj ? catObj.category_name : '';
     const isChecked = selected.has(key);
+    const quality = extractQuality(name);
 
     const card = document.createElement('div');
-    card.className = 'card' + (currentType === 'live' ? ' live' : '');
+    card.className = 'card' + (currentType === 'live' ? ' live' : '') + (isChecked ? ' selected' : '');
+    card.style.setProperty('--i', Math.min(i, 24)); // cap stagger so long lists don't feel slow
     card.innerHTML = `
       <div class="thumb">
-        <div class="check ${isChecked?'checked':''}" data-key="${key}">${isChecked?'✓':''}</div>
-        ${currentType==='live' ? `<span class="live-badge"><span class="pulse-dot"></span>LIVE</span>` : ''}
-        ${icon ? `<img src="${icon}" loading="lazy" onerror="this.remove()">` : `<span>sem imagem</span>`}
-      </div>
-      <div class="body">
-        <div class="title">${escapeHtml(name)}</div>
-        <div class="cat-tag">${escapeHtml(catName)}</div>
+        <div class="check ${isChecked?'checked':''}" data-key="${key}" role="checkbox" aria-checked="${isChecked}" aria-label="Selecionar ${escapeHtml(name)}">${isChecked?'✓':''}</div>
+        <div class="badges-row">
+          ${quality ? `<span class="quality-badge${quality==='4K'?' q4k':''}">${quality}</span>` : ''}
+          ${currentType==='live' ? `<span class="live-badge"><span class="pulse-dot"></span>LIVE</span>` : ''}
+        </div>
+        ${icon
+          ? `<div class="skel" style="position:absolute;inset:0;"></div><img src="${icon}" alt="${escapeHtml(name)}" loading="lazy" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove();this.remove()">`
+          : `<span>sem imagem</span>`}
+        <div class="scrim">
+          <div class="title">${escapeHtml(name)}</div>
+          <div class="cat-tag">${escapeHtml(catName)}</div>
+        </div>
         <div class="actions">
           ${currentType==='series'
-            ? `<button class="icon-btn" data-act="open-series">Episódios</button>`
-            : `<button class="icon-btn" data-act="preview">▶ Testar</button>`}
-          <button class="icon-btn" data-act="copy">🔗 Link</button>
+            ? `<button class="icon-btn" data-act="open-series" title="Ver episódios" aria-label="Ver episódios de ${escapeHtml(name)}">📺</button>`
+            : `<button class="icon-btn" data-act="preview" title="Testar stream" aria-label="Pré-visualizar ${escapeHtml(name)}">▶</button>`}
+          <button class="icon-btn" data-act="copy" title="Copiar link" aria-label="Copiar link de ${escapeHtml(name)}">🔗</button>
         </div>
       </div>
     `;
     card.querySelector('.check').onclick = (e) => { e.stopPropagation(); toggleSelect(it); };
     const copyBtn = card.querySelector('[data-act="copy"]');
-    if(copyBtn) copyBtn.onclick = () => copyText(itemUrl(it));
+    if(copyBtn) copyBtn.onclick = (e) => { e.stopPropagation(); copyText(itemUrl(it)); };
     const previewBtn = card.querySelector('[data-act="preview"]');
-    if(previewBtn) previewBtn.onclick = () => openPreview(it);
+    if(previewBtn) previewBtn.onclick = (e) => { e.stopPropagation(); openPreview(it); };
     const seriesBtn = card.querySelector('[data-act="open-series"]');
-    if(seriesBtn) seriesBtn.onclick = () => openSeries(it);
+    if(seriesBtn) seriesBtn.onclick = (e) => { e.stopPropagation(); openSeries(it); };
     grid.appendChild(card);
   });
+
+  const remaining = all.length - items.length;
+  const loadMoreWrap = $('loadMoreWrap');
+  if(remaining > 0){
+    loadMoreWrap.style.display = 'flex';
+    $('btnLoadMore').textContent = `Carregar mais (${Math.min(remaining, PAGE_SIZE)} de ${remaining} restantes)`;
+  } else {
+    loadMoreWrap.style.display = 'none';
+  }
 }
 
 function escapeHtml(s){
@@ -1075,8 +1285,6 @@ function loadPreview(ext, proxyIdx){
     setPreviewStatus('usando player nativo do navegador', false);
   }
 }
-
-function tryPreviewExt(ext){ loadPreview(ext, -1); }
 
 function toggleMediaProxy(){
   if(!useMediaProxy){
