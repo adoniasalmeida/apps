@@ -499,6 +499,7 @@ main{padding:0 26px 60px;min-width:0;}
           <option value="az">Nome A→Z</option>
           <option value="za">Nome Z→A</option>
         </select>
+        <button class="btn btn-ghost btn-sm" id="btnEpg" onclick="copyEpgUrl()" title="Copia a URL do EPG completo (grade de programação de todos os canais) em formato XMLTV">📅 Copiar EPG (XMLTV)</button>
         <div class="density-toggle" title="Densidade do grid">
           <button id="densCompact" onclick="setDensity('compact')" aria-label="Grid compacto">▦</button>
           <button id="densNormal" class="active" onclick="setDensity('normal')" aria-label="Grid normal">▤</button>
@@ -687,6 +688,13 @@ async function apiGet(action, extra={}, proxyIdx){
   return res.json();
 }
 
+function copyEpgUrl(){
+  if(!conn){ toast('Conecte-se primeiro.'); return; }
+  const url = `${baseUrl()}/xmltv.php?username=${encodeURIComponent(conn.user)}&password=${encodeURIComponent(conn.pass)}`;
+  copyText(url);
+  toast('URL do EPG (XMLTV) copiada!');
+}
+
 function toggleAdvanced(){
   $('advancedPanel').classList.toggle('show');
   document.querySelector('.gear-btn').classList.toggle('active');
@@ -864,6 +872,7 @@ function switchType(type){
   visibleCount = PAGE_SIZE;
   ['tabLive','tabVod','tabSeries'].forEach(id => $(id).classList.remove('active'));
   $('tab' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+  $('btnEpg').style.display = (type === 'live') ? 'inline-flex' : 'none';
   renderCategories();
   renderGrid();
   updateCrumb();
