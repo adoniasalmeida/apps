@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<title>Mercado — Lista de Compras</title>
+<title>ListaMercado — Lista de Compras</title>
 <meta name="description" content="Lista de compras por categoria, com calculadora embutida e total em tempo real.">
 <meta name="theme-color" content="#12151A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Mercado">
+<meta name="apple-mobile-web-app-title" content="ListaMercado">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="icon-192.png" type="image/png">
@@ -62,18 +62,12 @@ button{font-family:inherit;}
 }
 .brand{display:flex; align-items:center; gap:10px; flex:1; min-width:0;}
 .brand-mark{
-  width:38px; height:38px; border-radius:11px; flex:none;
+  width:40px; height:40px; border-radius:12px; flex:none;
   background:linear-gradient(155deg,#1D2230,#12151A);
   border:1px solid var(--border);
   display:flex; align-items:center; justify-content:center;
-  position:relative; overflow:hidden;
 }
-.brand-mark::after{
-  content:""; position:absolute; left:6px; right:6px; top:17px; height:3px;
-  background:var(--accent); border-radius:2px; opacity:.9;
-  box-shadow:0 0 8px rgba(61,220,132,.7);
-}
-.brand-mark svg{position:relative; z-index:1;}
+.brand-mark svg{display:block;}
 .brand-text{min-width:0;}
 .brand-text h1{margin:0; font-size:18px; font-weight:700; letter-spacing:.2px; line-height:1.1;}
 .brand-text span{display:block; font-size:11px; color:var(--muted); letter-spacing:.4px; text-transform:uppercase; margin-top:2px;}
@@ -130,7 +124,7 @@ button{font-family:inherit;}
   padding:12px; display:flex; flex-direction:column; gap:8px; position:relative;
 }
 .card .cat-tag{
-  position:absolute; top:10px; right:10px; width:8px; height:8px; border-radius:50%;
+  position:absolute; top:18px; right:12px; width:8px; height:8px; border-radius:50%;
 }
 .card .icon{
   font-size:26px; width:44px; height:44px; border-radius:12px;
@@ -285,6 +279,39 @@ button{font-family:inherit;}
 .file-input{display:none;}
 .backup-actions{display:flex; flex-direction:column; gap:10px;}
 .hint{font-size:12px; color:var(--muted); line-height:1.5; margin-top:4px;}
+
+/* Emoji picker */
+.icon-preview{
+  width:44px; height:44px; border-radius:12px; background:var(--panel2); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-size:22px; flex:none;
+}
+.icon-picker-field{display:flex; gap:8px; align-items:center;}
+.icon-picker-field input{flex:1;}
+.emoji-grid{
+  display:grid; grid-template-columns:repeat(7,1fr); gap:6px; max-height:210px; overflow-y:auto;
+  background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:10px; margin-top:8px;
+}
+.emoji-grid button{
+  border:1px solid transparent; background:var(--panel2); border-radius:9px; font-size:19px; padding:7px 0; cursor:pointer;
+}
+.emoji-grid button.sel{border-color:var(--accent); background:rgba(61,220,132,.15);}
+.emoji-cats{display:flex; gap:6px; overflow-x:auto; margin-top:10px; scrollbar-width:none;}
+.emoji-cats::-webkit-scrollbar{display:none;}
+.emoji-cats button{
+  flex:none; font-size:11.5px; font-weight:600; padding:6px 10px; border-radius:999px; border:1px solid var(--border);
+  background:var(--panel); color:var(--muted); cursor:pointer;
+}
+.emoji-cats button.active{background:var(--text); color:#12151A; border-color:var(--text);}
+.edit-fab{
+  position:absolute; top:10px; right:26px; width:22px; height:22px; border-radius:7px; border:none;
+  background:var(--panel2); color:var(--muted); font-size:11px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.color-grid{display:flex; flex-wrap:wrap; gap:9px; margin-top:4px;}
+.color-grid button{
+  width:32px; height:32px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0;
+}
+.color-grid button.sel{border-color:var(--text); box-shadow:0 0 0 2px var(--bg), 0 0 0 3px var(--text);}
+.chip.chip-add{background:transparent; border-style:dashed; color:var(--muted);}
 </style>
 </head>
 <body>
@@ -295,7 +322,7 @@ button{font-family:inherit;}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 8h14l-1.5 8.5a2 2 0 0 1-2 1.5H9a2 2 0 0 1-2-1.5L5 4H2" stroke="#3DDC84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="21" r="1.4" fill="#3DDC84"/><circle cx="17" cy="21" r="1.4" fill="#3DDC84"/></svg>
     </div>
     <div class="brand-text">
-      <h1>Mercado</h1>
+      <h1>ListaMercado</h1>
       <span id="itemCountLabel">0 itens no catálogo</span>
     </div>
   </div>
@@ -355,7 +382,7 @@ button{font-family:inherit;}
       <div id="cartLines"></div>
       <div class="receipt-divider"></div>
       <div class="rtotal-row"><span class="l">Total</span><span class="v" id="receiptTotal">R$ 0,00</span></div>
-      <div class="rmeta"><span id="receiptItemsMeta">0 itens</span><span>MERCADO APP</span></div>
+      <div class="rmeta"><span id="receiptItemsMeta">0 itens</span><span>LISTAMERCADO</span></div>
     </div>
     <div class="sheet-body">
       <div class="row-btns">
@@ -366,25 +393,28 @@ button{font-family:inherit;}
   </div>
 </div>
 
-<!-- ADD PRODUCT MODAL -->
+<!-- ADD/EDIT PRODUCT MODAL -->
 <div class="overlay" id="addOverlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-head"><h2>Novo produto</h2><button class="icon-btn" data-close="addOverlay">✕</button></div>
+    <div class="sheet-head"><h2 id="productModalTitle">Novo produto</h2><button class="icon-btn" data-close="addOverlay">✕</button></div>
     <div class="sheet-body">
       <div class="field">
         <label>Nome do produto</label>
         <input id="npName" type="text" placeholder="Ex: Achocolatado 400g">
       </div>
-      <div class="field two">
-        <div>
-          <label>Categoria</label>
-          <select id="npCategory"></select>
+      <div class="field">
+        <label>Categoria</label>
+        <select id="npCategory"></select>
+      </div>
+      <div class="field">
+        <label>Ícone</label>
+        <div class="icon-picker-field">
+          <div class="icon-preview" id="npIconPreview">🛒</div>
+          <input id="npIcon" type="text" maxlength="4" placeholder="Toque num ícone abaixo ou digite um emoji">
         </div>
-        <div>
-          <label>Ícone (emoji)</label>
-          <input id="npIcon" type="text" maxlength="4" placeholder="🛒">
-        </div>
+        <div class="emoji-cats" id="emojiCats"></div>
+        <div class="emoji-grid" id="emojiGrid"></div>
       </div>
       <div class="field two">
         <div>
@@ -392,16 +422,30 @@ button{font-family:inherit;}
           <input id="npPrice" type="number" step="0.01" min="0" placeholder="0,00">
         </div>
         <div>
-          <label>Unidade</label>
+          <label>Peso / unidade</label>
           <select id="npUnit">
-            <option value="un">unidade</option>
-            <option value="kg">kg</option>
-            <option value="l">litro</option>
-            <option value="pct">pacote</option>
+            <option value="un">Unidade (un)</option>
+            <option value="kg">Quilo (kg)</option>
+            <option value="g">Grama (g)</option>
+            <option value="l">Litro (L)</option>
+            <option value="ml">Mililitro (ml)</option>
+            <option value="pacote">Pacote</option>
+            <option value="duzia">Dúzia</option>
+            <option value="caixa">Caixa</option>
+            <option value="garrafa">Garrafa</option>
+            <option value="lata">Lata</option>
+            <option value="outro">Outro...</option>
           </select>
         </div>
       </div>
-      <button class="btn primary" id="btnSaveProduct" style="width:100%">Adicionar ao catálogo</button>
+      <div class="field" id="npUnitCustomWrap" style="display:none">
+        <label>Descreva a unidade</label>
+        <input id="npUnitCustom" type="text" placeholder="Ex: fardo, rolo, saca 25kg">
+      </div>
+      <div class="row-btns">
+        <button class="btn danger" id="btnDeleteProduct" style="display:none">🗑 Excluir</button>
+        <button class="btn primary" id="btnSaveProduct" style="flex:2">Salvar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -439,12 +483,39 @@ button{font-family:inherit;}
   </div>
 </div>
 
+<!-- NEW CATEGORY MODAL -->
+<div class="overlay" id="catOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Nova categoria</h2><button class="icon-btn" data-close="catOverlay">✕</button></div>
+    <div class="sheet-body">
+      <div class="field">
+        <label>Nome da categoria</label>
+        <input id="ncName" type="text" placeholder="Ex: Bazar, Frios, Pet">
+      </div>
+      <div class="field">
+        <label>Ícone</label>
+        <div class="icon-picker-field">
+          <div class="icon-preview" id="ncIconPreview">🏷️</div>
+          <input id="ncIcon" type="text" maxlength="4" placeholder="Toque num ícone abaixo">
+        </div>
+        <div class="emoji-grid" id="ncEmojiGrid"></div>
+      </div>
+      <div class="field">
+        <label>Cor</label>
+        <div class="color-grid" id="ncColorGrid"></div>
+      </div>
+      <button class="btn primary" id="btnSaveCategory" style="width:100%">Criar categoria</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 /* ================= DATA ================= */
-const CATEGORIES = [
+const BASE_CATEGORIES = [
   {id:"hortifruti", label:"Hortifruti", emoji:"🥬", color:"#4CAF50"},
   {id:"acougue", label:"Açougue", emoji:"🥩", color:"#E5484D"},
   {id:"padaria", label:"Padaria", emoji:"🥖", color:"#D9A441"},
@@ -458,18 +529,28 @@ const CATEGORIES = [
   {id:"petshop", label:"Petshop", emoji:"🐾", color:"#C08552"},
   {id:"bebe", label:"Bebê", emoji:"🍼", color:"#FFB6C9"},
 ];
-const catMap = Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+const LS_CATEGORIES = "mercado_categories_custom_v1";
+function loadCustomCategories(){
+  try{ const raw = localStorage.getItem(LS_CATEGORIES); if(raw) return JSON.parse(raw); }catch(e){}
+  return [];
+}
+function saveCustomCategories(list){ localStorage.setItem(LS_CATEGORIES, JSON.stringify(list)); }
+let CATEGORIES = [...BASE_CATEGORIES, ...loadCustomCategories()];
+let catMap = Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+function refreshCatMap(){ catMap = Object.fromEntries(CATEGORIES.map(c=>[c.id,c])); }
+
+const CATEGORY_COLORS = ["#4CAF50","#E5484D","#D9A441","#5AC8FA","#FF9F45","#4098FF","#7EC8E3","#33C7C0","#FF6FA5","#B983FF","#C08552","#FFB6C9","#3DDC84","#A78BFA","#F97316","#22D3EE"];
 
 const DEFAULT_PRODUCTS = [
   // alimentação
-  {id:"al01",name:"Arroz 5kg",category:"alimentacao",icon:"🍚",price:25.90,unit:"pct"},
-  {id:"al02",name:"Feijão 1kg",category:"alimentacao",icon:"🫘",price:8.50,unit:"pct"},
-  {id:"al03",name:"Açúcar 1kg",category:"alimentacao",icon:"🍬",price:4.90,unit:"pct"},
+  {id:"al01",name:"Arroz 5kg",category:"alimentacao",icon:"🍚",price:25.90,unit:"pacote"},
+  {id:"al02",name:"Feijão 1kg",category:"alimentacao",icon:"🫘",price:8.50,unit:"pacote"},
+  {id:"al03",name:"Açúcar 1kg",category:"alimentacao",icon:"🍬",price:4.90,unit:"pacote"},
   {id:"al04",name:"Óleo de soja 900ml",category:"alimentacao",icon:"🫒",price:7.90,unit:"un"},
-  {id:"al05",name:"Sal 1kg",category:"alimentacao",icon:"🧂",price:2.50,unit:"pct"},
-  {id:"al06",name:"Café 500g",category:"alimentacao",icon:"☕",price:14.90,unit:"pct"},
-  {id:"al07",name:"Macarrão 500g",category:"alimentacao",icon:"🍝",price:4.50,unit:"pct"},
-  {id:"al08",name:"Farinha de trigo 1kg",category:"alimentacao",icon:"🌾",price:5.20,unit:"pct"},
+  {id:"al05",name:"Sal 1kg",category:"alimentacao",icon:"🧂",price:2.50,unit:"pacote"},
+  {id:"al06",name:"Café 500g",category:"alimentacao",icon:"☕",price:14.90,unit:"pacote"},
+  {id:"al07",name:"Macarrão 500g",category:"alimentacao",icon:"🍝",price:4.50,unit:"pacote"},
+  {id:"al08",name:"Farinha de trigo 1kg",category:"alimentacao",icon:"🌾",price:5.20,unit:"pacote"},
   {id:"al09",name:"Molho de tomate 340g",category:"alimentacao",icon:"🍅",price:3.90,unit:"un"},
   {id:"al10",name:"Leite condensado 395g",category:"alimentacao",icon:"🥫",price:6.50,unit:"un"},
   // hortifruti
@@ -485,7 +566,7 @@ const DEFAULT_PRODUCTS = [
   {id:"ac01",name:"Peito de frango",category:"acougue",icon:"🍗",price:14.90,unit:"kg"},
   {id:"ac02",name:"Carne moída",category:"acougue",icon:"🥩",price:32.90,unit:"kg"},
   {id:"ac03",name:"Linguiça",category:"acougue",icon:"🌭",price:18.90,unit:"kg"},
-  {id:"ac04",name:"Ovos",category:"acougue",icon:"🥚",price:12.90,unit:"pct"},
+  {id:"ac04",name:"Ovos",category:"acougue",icon:"🥚",price:12.90,unit:"pacote"},
   // padaria
   {id:"pd01",name:"Pão francês",category:"padaria",icon:"🥖",price:14.90,unit:"kg"},
   {id:"pd02",name:"Pão de forma",category:"padaria",icon:"🍞",price:8.90,unit:"un"},
@@ -505,37 +586,53 @@ const DEFAULT_PRODUCTS = [
   // congelados
   {id:"cg01",name:"Sorvete 2L",category:"congelados",icon:"🍦",price:22.90,unit:"un"},
   {id:"cg02",name:"Pizza congelada",category:"congelados",icon:"🍕",price:15.90,unit:"un"},
-  {id:"cg03",name:"Batata frita congelada",category:"congelados",icon:"🍟",price:12.90,unit:"pct"},
-  {id:"cg04",name:"Nuggets",category:"congelados",icon:"🍗",price:14.90,unit:"pct"},
+  {id:"cg03",name:"Batata frita congelada",category:"congelados",icon:"🍟",price:12.90,unit:"pacote"},
+  {id:"cg04",name:"Nuggets",category:"congelados",icon:"🍗",price:14.90,unit:"pacote"},
   // limpeza
   {id:"lp01",name:"Detergente",category:"limpeza",icon:"🧴",price:3.20,unit:"un"},
-  {id:"lp02",name:"Sabão em pó 1kg",category:"limpeza",icon:"🧼",price:15.90,unit:"pct"},
+  {id:"lp02",name:"Sabão em pó 1kg",category:"limpeza",icon:"🧼",price:15.90,unit:"pacote"},
   {id:"lp03",name:"Desinfetante 1L",category:"limpeza",icon:"🧴",price:6.90,unit:"un"},
   {id:"lp04",name:"Água sanitária 1L",category:"limpeza",icon:"🧴",price:4.50,unit:"un"},
-  {id:"lp05",name:"Esponja de aço",category:"limpeza",icon:"🧽",price:3.90,unit:"pct"},
-  {id:"lp06",name:"Papel toalha",category:"limpeza",icon:"🧻",price:8.90,unit:"pct"},
+  {id:"lp05",name:"Esponja de aço",category:"limpeza",icon:"🧽",price:3.90,unit:"pacote"},
+  {id:"lp06",name:"Papel toalha",category:"limpeza",icon:"🧻",price:8.90,unit:"pacote"},
   // higiene
-  {id:"hg01",name:"Papel higiênico 12un",category:"higiene",icon:"🧻",price:22.90,unit:"pct"},
+  {id:"hg01",name:"Papel higiênico 12un",category:"higiene",icon:"🧻",price:22.90,unit:"pacote"},
   {id:"hg02",name:"Sabonete",category:"higiene",icon:"🧼",price:2.90,unit:"un"},
   {id:"hg03",name:"Pasta de dente",category:"higiene",icon:"🦷",price:6.90,unit:"un"},
   {id:"hg04",name:"Escova de dente",category:"higiene",icon:"🪥",price:8.90,unit:"un"},
   {id:"hg05",name:"Shampoo 350ml",category:"higiene",icon:"🧴",price:16.90,unit:"un"},
   {id:"hg06",name:"Condicionador 350ml",category:"higiene",icon:"🧴",price:16.90,unit:"un"},
   {id:"hg07",name:"Desodorante",category:"higiene",icon:"🧴",price:12.90,unit:"un"},
-  {id:"hg08",name:"Absorvente",category:"higiene",icon:"🩹",price:9.90,unit:"pct"},
+  {id:"hg08",name:"Absorvente",category:"higiene",icon:"🩹",price:9.90,unit:"pacote"},
   // beleza
   {id:"bz01",name:"Creme hidratante",category:"beleza",icon:"💄",price:24.90,unit:"un"},
   {id:"bz02",name:"Protetor solar",category:"beleza",icon:"🧴",price:39.90,unit:"un"},
   {id:"bz03",name:"Batom",category:"beleza",icon:"💄",price:19.90,unit:"un"},
   {id:"bz04",name:"Perfume",category:"beleza",icon:"🌸",price:89.90,unit:"un"},
   // petshop
-  {id:"pt01",name:"Ração para cães 15kg",category:"petshop",icon:"🐶",price:89.90,unit:"pct"},
-  {id:"pt02",name:"Ração para gatos 3kg",category:"petshop",icon:"🐱",price:34.90,unit:"pct"},
-  {id:"pt03",name:"Areia sanitária",category:"petshop",icon:"🐾",price:22.90,unit:"pct"},
+  {id:"pt01",name:"Ração para cães 15kg",category:"petshop",icon:"🐶",price:89.90,unit:"pacote"},
+  {id:"pt02",name:"Ração para gatos 3kg",category:"petshop",icon:"🐱",price:34.90,unit:"pacote"},
+  {id:"pt03",name:"Areia sanitária",category:"petshop",icon:"🐾",price:22.90,unit:"pacote"},
   // bebê
-  {id:"be01",name:"Fraldas pacote",category:"bebe",icon:"🍼",price:39.90,unit:"pct"},
-  {id:"be02",name:"Lenço umedecido",category:"bebe",icon:"🧴",price:12.90,unit:"pct"},
+  {id:"be01",name:"Fraldas pacote",category:"bebe",icon:"🍼",price:39.90,unit:"pacote"},
+  {id:"be02",name:"Lenço umedecido",category:"bebe",icon:"🧴",price:12.90,unit:"pacote"},
 ];
+
+const EMOJI_LIBRARY = {
+  hortifruti: ["🥬","🥦","🥕","🍅","🧅","🧄","🥔","🌽","🥒","🍆","🫑","🥑","🍄","🫒","🍌","🍎","🍏","🍊","🍋","🍇","🍉","🍓","🍍","🥭","🍑","🍒","🍐","🥝","🥥","🍈"],
+  acougue: ["🍗","🍖","🥩","🌭","🥓","🍤","🐟","🐔","🥚","🧆"],
+  padaria: ["🥖","🍞","🥐","🥯","🧁","🍰","🎂","🍩","🥨","🍪"],
+  laticinios: ["🥛","🧀","🧈","🥣","🍦"],
+  alimentacao: ["🍚","🫘","🍬","🫒","🧂","☕","🍝","🌾","🥫","🍯","🌶️","🥜","🍿","🧇","🥞","🫙","🍜","🍲","🥘","🍛"],
+  bebidas: ["🥤","🧃","💧","🍺","🍷","🥂","🧋","🍹","🧉","☕"],
+  congelados: ["🧊","🍦","🍕","🍟","🍗","🥶"],
+  limpeza: ["🧴","🧼","🧽","🧻","🪣","🧹","🧺","🚿","🗑️"],
+  higiene: ["🧻","🧼","🦷","🪥","🧴","🩹","🪒","🧷"],
+  beleza: ["💄","🧴","🌸","💅","🧖","🪞","💇","✨"],
+  petshop: ["🐶","🐱","🐾","🦴","🐦","🐠"],
+  bebe: ["🍼","🧸","👶","🧴","🩲"],
+};
+const EMOJI_ALL = [...new Set(Object.values(EMOJI_LIBRARY).flat())];
 
 /* ================= STATE ================= */
 const LS_PRODUCTS = "mercado_products_v1";
@@ -573,10 +670,11 @@ function renderChips(){
   wrap.innerHTML = chips.map(c => `
     <div class="chip ${activeCategory===c.id?'active':''}" data-cat="${c.id}">
       <span class="dot" style="background:${c.color}"></span>${c.emoji} ${c.label}
-    </div>`).join('');
-  wrap.querySelectorAll('.chip').forEach(el=>{
+    </div>`).join('') + `<div class="chip chip-add" id="chipAddCat">+ Categoria</div>`;
+  wrap.querySelectorAll('.chip[data-cat]').forEach(el=>{
     el.addEventListener('click', ()=>{ activeCategory = el.dataset.cat; renderChips(); renderGrid(); });
   });
+  document.getElementById('chipAddCat').addEventListener('click', ()=> openCategoryModal());
 }
 
 /* ================= RENDER: PRODUCT GRID ================= */
@@ -601,6 +699,7 @@ function renderGrid(){
     const q = qtyDraft[p.id] || 1;
     return `
     <div class="card" data-id="${p.id}">
+      <button class="edit-fab" data-edit="${p.id}" title="Editar produto">✎</button>
       <span class="cat-tag" style="background:${cat.color}"></span>
       <div class="icon">${p.icon||'🛒'}</div>
       <div class="name">${p.name}</div>
@@ -651,8 +750,13 @@ function renderGrid(){
     el.classList.add('in-cart');
     showToast(prod.icon+' '+prod.name+' adicionado');
   }));
+  grid.querySelectorAll('[data-edit]').forEach(el=>el.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    openProductModal(el.dataset.edit);
+  }));
 }
-function unitLabel(u){ return {un:'unidade', kg:'kg', l:'litro', pct:'pacote'}[u] || 'unidade'; }
+const UNIT_LABELS = {un:'unidade', kg:'kg', g:'grama', l:'litro', ml:'ml', pacote:'pacote', duzia:'dúzia', caixa:'caixa', garrafa:'garrafa', lata:'lata'};
+function unitLabel(u){ if(!u) return 'unidade'; return UNIT_LABELS[u] || u; }
 
 /* ================= CART LOGIC ================= */
 function addToCart(prod, qty){
@@ -699,10 +803,23 @@ function renderCart(){
     const it = cart.find(c=>c.id===el.dataset.cinc); it.qty++; saveCart(); renderCart();
   }));
   linesWrap.querySelectorAll('[data-cdec]').forEach(el=>el.addEventListener('click', ()=>{
-    const it = cart.find(c=>c.id===el.dataset.cdec); it.qty--; if(it.qty<=0){ cart = cart.filter(c=>c.id!==el.dataset.cdec); } saveCart(); renderCart(); renderGrid();
+    const id = el.dataset.cdec;
+    const it = cart.find(c=>c.id===id);
+    if(it.qty<=1){
+      const prod = products.find(p=>p.id===id);
+      if(!confirm('Remover "'+(prod?prod.name:'item')+'" do carrinho?')) return;
+      cart = cart.filter(c=>c.id!==id);
+    } else {
+      it.qty--;
+    }
+    saveCart(); renderCart(); renderGrid();
   }));
   linesWrap.querySelectorAll('[data-crm]').forEach(el=>el.addEventListener('click', ()=>{
-    cart = cart.filter(c=>c.id!==el.dataset.crm); saveCart(); renderCart(); renderGrid();
+    const id = el.dataset.crm;
+    const prod = products.find(p=>p.id===id);
+    if(!confirm('Remover "'+(prod?prod.name:'item')+'" do carrinho?')) return;
+    cart = cart.filter(c=>c.id!==id);
+    saveCart(); renderCart(); renderGrid();
   }));
 }
 
@@ -754,38 +871,213 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   doc.text(brl(cartTotal()), 192, y, {align:'right'});
   y += 6;
   doc.setFont('courier','normal'); doc.setFontSize(9); doc.setTextColor(130);
-  doc.text(cartCount() + ' itens · gerado pelo app Mercado', marginX, y);
+  doc.text(cartCount() + ' itens · gerado pelo ListaMercado', marginX, y);
 
   doc.save('lista-de-compras-' + new Date().toISOString().slice(0,10) + '.pdf');
   showToast('PDF exportado');
 });
 
-/* ================= ADD PRODUCT ================= */
+/* ================= ADD / EDIT PRODUCT ================= */
+let editingId = null; // null = creating new product
+let pickedEmojiCat = 'todos';
+
 function fillCategorySelect(){
   const sel = document.getElementById('npCategory');
-  sel.innerHTML = CATEGORIES.map(c=>`<option value="${c.id}">${c.emoji} ${c.label}</option>`).join('');
+  sel.innerHTML = CATEGORIES.map(c=>`<option value="${c.id}">${c.emoji} ${c.label}</option>`).join('')
+    + `<option value="__new__">➕ Criar nova categoria...</option>`;
 }
-document.getElementById('btnAddProduct').addEventListener('click', ()=>{
-  document.getElementById('npName').value='';
-  document.getElementById('npIcon').value='';
-  document.getElementById('npPrice').value='';
-  openModal('addOverlay');
+document.getElementById('npCategory').addEventListener('change', (e)=>{
+  if(e.target.value === '__new__'){
+    openCategoryModal(true);
+  } else {
+    pickedEmojiCat = e.target.value;
+    renderEmojiCats(); renderEmojiGrid();
+  }
 });
+document.getElementById('npUnit').addEventListener('change', (e)=>{
+  document.getElementById('npUnitCustomWrap').style.display = e.target.value==='outro' ? 'block' : 'none';
+});
+
+function renderEmojiCats(){
+  const wrap = document.getElementById('emojiCats');
+  const cats = [{id:'todos', label:'Todos'}, ...CATEGORIES.map(c=>({id:c.id, label:c.label}))];
+  wrap.innerHTML = cats.map(c=>`<button data-ecat="${c.id}" class="${pickedEmojiCat===c.id?'active':''}">${c.label}</button>`).join('');
+  wrap.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{
+    pickedEmojiCat = b.dataset.ecat;
+    renderEmojiCats();
+    renderEmojiGrid();
+  }));
+}
+function renderEmojiGrid(){
+  const grid = document.getElementById('emojiGrid');
+  const list = pickedEmojiCat==='todos' ? EMOJI_ALL : (EMOJI_LIBRARY[pickedEmojiCat] || EMOJI_ALL);
+  const current = document.getElementById('npIcon').value.trim();
+  grid.innerHTML = list.map(e=>`<button type="button" class="${e===current?'sel':''}" data-emoji="${e}">${e}</button>`).join('');
+  grid.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{
+    document.getElementById('npIcon').value = b.dataset.emoji;
+    document.getElementById('npIconPreview').textContent = b.dataset.emoji;
+    renderEmojiGrid();
+  }));
+}
+document.getElementById('npIcon').addEventListener('input', (e)=>{
+  document.getElementById('npIconPreview').textContent = e.target.value.trim() || '🛒';
+});
+
+const KNOWN_UNITS = ["un","kg","g","l","ml","pacote","duzia","caixa","garrafa","lata"];
+function setUnitFields(unitValue){
+  const sel = document.getElementById('npUnit');
+  const customWrap = document.getElementById('npUnitCustomWrap');
+  const customInput = document.getElementById('npUnitCustom');
+  if(unitValue && KNOWN_UNITS.includes(unitValue)){
+    sel.value = unitValue; customWrap.style.display='none'; customInput.value='';
+  } else if(unitValue){
+    sel.value = 'outro'; customWrap.style.display='block'; customInput.value = unitValue;
+  } else {
+    sel.value = 'un'; customWrap.style.display='none'; customInput.value='';
+  }
+}
+function getUnitValue(){
+  const sel = document.getElementById('npUnit').value;
+  if(sel==='outro'){ return document.getElementById('npUnitCustom').value.trim() || 'un'; }
+  return sel;
+}
+
+function openProductModal(id){
+  editingId = id || null;
+  const delBtn = document.getElementById('btnDeleteProduct');
+  if(editingId){
+    const p = products.find(x=>x.id===editingId);
+    document.getElementById('productModalTitle').textContent = 'Editar produto';
+    document.getElementById('npName').value = p.name;
+    document.getElementById('npCategory').value = p.category;
+    document.getElementById('npIcon').value = p.icon || '';
+    document.getElementById('npIconPreview').textContent = p.icon || '🛒';
+    document.getElementById('npPrice').value = p.price;
+    setUnitFields(p.unit);
+    pickedEmojiCat = p.category;
+    delBtn.style.display = 'flex';
+  } else {
+    document.getElementById('productModalTitle').textContent = 'Novo produto';
+    document.getElementById('npName').value='';
+    document.getElementById('npCategory').value = activeCategory!=='all' ? activeCategory : CATEGORIES[0].id;
+    document.getElementById('npIcon').value='';
+    document.getElementById('npIconPreview').textContent = '🛒';
+    document.getElementById('npPrice').value='';
+    setUnitFields('un');
+    pickedEmojiCat = document.getElementById('npCategory').value;
+    delBtn.style.display = 'none';
+  }
+  renderEmojiCats();
+  renderEmojiGrid();
+  openModal('addOverlay');
+}
+
+document.getElementById('btnAddProduct').addEventListener('click', ()=> openProductModal(null));
+
 document.getElementById('btnSaveProduct').addEventListener('click', ()=>{
   const name = document.getElementById('npName').value.trim();
   const category = document.getElementById('npCategory').value;
   let icon = document.getElementById('npIcon').value.trim();
   const price = parseFloat((document.getElementById('npPrice').value||'0').replace(',','.')) || 0;
-  const unit = document.getElementById('npUnit').value;
+  const unit = getUnitValue();
   if(!name){ showToast('Digite o nome do produto'); return; }
   if(!icon) icon = catMap[category].emoji;
-  const id = 'cu' + Date.now().toString(36);
-  products.push({id, name, category, icon, price, unit});
-  saveProducts();
+  if(editingId){
+    const p = products.find(x=>x.id===editingId);
+    Object.assign(p, {name, category, icon, price, unit});
+    const cartItem = cart.find(c=>c.id===editingId);
+    if(cartItem) cartItem.price = price;
+  } else {
+    const id = 'cu' + Date.now().toString(36);
+    products.push({id, name, category, icon, price, unit});
+  }
+  saveProducts(); saveCart();
   activeCategory = category;
-  renderChips(); renderGrid();
+  renderChips(); renderGrid(); renderCart();
   closeModal('addOverlay');
-  showToast('Produto cadastrado ✓');
+  showToast(editingId ? 'Produto atualizado ✓' : 'Produto cadastrado ✓');
+});
+
+document.getElementById('btnDeleteProduct').addEventListener('click', ()=>{
+  if(!editingId) return;
+  const p = products.find(x=>x.id===editingId);
+  if(confirm('Excluir "'+p.name+'" do catálogo? Essa ação não pode ser desfeita.')){
+    products = products.filter(x=>x.id!==editingId);
+    cart = cart.filter(c=>c.id!==editingId);
+    saveProducts(); saveCart();
+    renderChips(); renderGrid(); renderCart();
+    closeModal('addOverlay');
+    showToast('Produto excluído');
+  }
+});
+
+/* ================= NEW CATEGORY ================= */
+let catReturnToProduct = false;
+let ncSelectedEmoji = '🏷️';
+let ncSelectedColor = CATEGORY_COLORS[0];
+
+function renderNcEmojiGrid(){
+  const grid = document.getElementById('ncEmojiGrid');
+  grid.innerHTML = EMOJI_ALL.map(e=>`<button type="button" class="${e===ncSelectedEmoji?'sel':''}" data-nemoji="${e}">${e}</button>`).join('');
+  grid.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{
+    ncSelectedEmoji = b.dataset.nemoji;
+    document.getElementById('ncIcon').value = ncSelectedEmoji;
+    document.getElementById('ncIconPreview').textContent = ncSelectedEmoji;
+    renderNcEmojiGrid();
+  }));
+}
+function renderNcColorGrid(){
+  const grid = document.getElementById('ncColorGrid');
+  grid.innerHTML = CATEGORY_COLORS.map(c=>`<button type="button" class="${c===ncSelectedColor?'sel':''}" data-color="${c}" style="background:${c}"></button>`).join('');
+  grid.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{
+    ncSelectedColor = b.dataset.color;
+    renderNcColorGrid();
+  }));
+}
+document.getElementById('ncIcon').addEventListener('input', (e)=>{
+  ncSelectedEmoji = e.target.value.trim() || '🏷️';
+  document.getElementById('ncIconPreview').textContent = ncSelectedEmoji;
+});
+
+function openCategoryModal(returnToProduct){
+  catReturnToProduct = !!returnToProduct;
+  document.getElementById('ncName').value = '';
+  ncSelectedEmoji = '🏷️';
+  ncSelectedColor = CATEGORY_COLORS[Math.floor(Math.random()*CATEGORY_COLORS.length)];
+  document.getElementById('ncIcon').value = '';
+  document.getElementById('ncIconPreview').textContent = ncSelectedEmoji;
+  renderNcEmojiGrid();
+  renderNcColorGrid();
+  openModal('catOverlay');
+}
+
+function slugify(str){
+  return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'cat';
+}
+
+document.getElementById('btnSaveCategory').addEventListener('click', ()=>{
+  const name = document.getElementById('ncName').value.trim();
+  if(!name){ showToast('Digite o nome da categoria'); return; }
+  let id = slugify(name);
+  if(catMap[id]) id = id + '-' + Date.now().toString(36).slice(-4);
+  const newCat = {id, label:name, emoji:ncSelectedEmoji, color:ncSelectedColor};
+  CATEGORIES.push(newCat);
+  refreshCatMap();
+  const custom = loadCustomCategories();
+  custom.push(newCat);
+  saveCustomCategories(custom);
+
+  renderChips();
+  fillCategorySelect();
+  if(catReturnToProduct){
+    document.getElementById('npCategory').value = id;
+    pickedEmojiCat = id;
+    renderEmojiCats(); renderEmojiGrid();
+  } else {
+    activeCategory = id; renderChips(); renderGrid();
+  }
+  closeModal('catOverlay');
+  showToast('Categoria "'+name+'" criada ✓');
 });
 
 /* ================= CALCULATOR ================= */
@@ -870,7 +1162,14 @@ document.getElementById('btnResetJson').addEventListener('click', ()=>{
 
 /* ================= MODAL HELPERS ================= */
 function openModal(id){ document.getElementById(id).classList.add('show'); }
-function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+function closeModal(id){
+  document.getElementById(id).classList.remove('show');
+  if(id==='catOverlay' && catReturnToProduct){
+    const sel = document.getElementById('npCategory');
+    if(sel.value === '__new__') sel.value = pickedEmojiCat && catMap[pickedEmojiCat] ? pickedEmojiCat : CATEGORIES[0].id;
+    catReturnToProduct = false;
+  }
+}
 document.querySelectorAll('[data-close]').forEach(el=>{
   el.addEventListener('click', ()=> closeModal(el.dataset.close));
 });
