@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#12151A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ListaMercado">
+<meta name="apple-mobile-web-app-title" content="Mercado">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="icon-192.png" type="image/png">
@@ -93,6 +93,18 @@ button{font-family:inherit;}
 }
 .search-box input::placeholder{color:var(--muted);}
 .search-box svg{flex:none; color:var(--muted);}
+
+.mode-toggle{
+  display:flex; gap:6px; margin:14px 16px 4px; padding:4px; border-radius:14px;
+  background:var(--panel); border:1px solid var(--border);
+}
+.mode-btn{
+  flex:1; border:0; background:transparent; color:var(--muted); font-weight:700; font-size:13.5px;
+  padding:10px 8px; border-radius:11px; cursor:pointer; transition:.15s all;
+}
+.mode-btn.active{background:var(--accent); color:var(--accent-ink); box-shadow:0 4px 12px rgba(61,220,132,.25);}
+.mode-btn.active.shop-active{background:var(--amber); color:#3A2400; box-shadow:0 4px 12px rgba(255,176,32,.25);}
+.mode-hint{padding:8px 20px 0; font-size:12px; color:var(--muted); text-align:center;}
 
 .categories{
   display:flex; gap:8px; overflow-x:auto; padding:14px 16px; scrollbar-width:none;
@@ -194,6 +206,27 @@ button{font-family:inherit;}
 .receipt-bar .rb-mid .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--paper-muted); font-weight:700;}
 .receipt-bar .rb-mid .total{font-size:19px; font-weight:700; font-family:'IBM Plex Mono',monospace; letter-spacing:.2px;}
 .receipt-bar .rb-chevron{color:var(--paper-muted); flex:none;}
+.list-bar{
+  position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:40; cursor:pointer;
+  background:var(--panel2); color:var(--text); border:1px solid var(--border);
+  border-radius:16px;
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
+  display:flex; align-items:center; gap:12px; padding:12px 16px;
+}
+.list-bar .rb-icon{
+  width:36px; height:36px; border-radius:10px; background:var(--accent); color:var(--accent-ink);
+  display:flex; align-items:center; justify-content:center; flex:none; position:relative;
+}
+.list-bar .rb-icon .count{
+  position:absolute; top:-6px; right:-6px; background:var(--amber); color:#3A2400;
+  font-size:10px; font-weight:700; min-width:16px; height:16px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; padding:0 3px; font-family:'IBM Plex Mono',monospace;
+}
+.list-bar .rb-mid{flex:1; min-width:0;}
+.list-bar .rb-mid .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:700;}
+.list-bar .rb-mid .total{font-size:15.5px; font-weight:700;}
+.list-bar .rb-chevron{color:var(--muted); flex:none;}
 
 /* ---------- Modals ---------- */
 .overlay{
@@ -276,6 +309,34 @@ button{font-family:inherit;}
 }
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
+.wline{
+  display:flex; align-items:center; gap:10px; padding:11px; background:var(--panel); border:1px solid var(--border);
+  border-radius:14px; margin-bottom:8px;
+}
+.wline .ic{font-size:20px; width:30px; text-align:center; flex:none;}
+.wline .info{flex:1; min-width:0;}
+.wline .info .n{font-size:14px; font-weight:600; line-height:1.25;}
+.wline .info .m{font-size:11.5px; color:var(--muted);}
+.wline .stepper{flex:none;}
+.wline .rm{flex:none; width:26px; height:26px; border-radius:8px; border:none; background:transparent; color:var(--danger); font-size:16px; cursor:pointer;}
+.wline .buy-btn{
+  flex:none; padding:8px 12px; border-radius:10px; border:1px solid var(--accent); background:rgba(61,220,132,.12);
+  color:var(--accent); font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap;
+}
+.wline-buyform{
+  display:none; align-items:center; gap:8px; padding:10px 11px 4px; margin:-4px 0 8px; background:var(--panel);
+  border:1px solid var(--border); border-top:none; border-radius:0 0 14px 14px;
+}
+.wline-buyform.show{display:flex;}
+.wline-buyform input{
+  flex:1; background:var(--panel2); border:1px solid var(--border); border-radius:10px; color:var(--text);
+  padding:9px 10px; font-size:14px; font-family:'IBM Plex Mono',monospace;
+}
+.wline-buyform button{
+  flex:none; padding:9px 12px; border-radius:10px; border:none; font-size:12.5px; font-weight:700; cursor:pointer;
+}
+.wline-buyform .ok{background:var(--accent); color:var(--accent-ink);}
+.wline-buyform .cancel{background:var(--panel2); color:var(--muted);}
 .file-input{display:none;}
 .backup-actions{display:flex; flex-direction:column; gap:10px;}
 .hint{font-size:12px; color:var(--muted); line-height:1.5; margin-top:4px;}
@@ -322,13 +383,13 @@ button{font-family:inherit;}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 8h14l-1.5 8.5a2 2 0 0 1-2 1.5H9a2 2 0 0 1-2-1.5L5 4H2" stroke="#3DDC84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="21" r="1.4" fill="#3DDC84"/><circle cx="17" cy="21" r="1.4" fill="#3DDC84"/></svg>
     </div>
     <div class="brand-text">
-      <h1>ListaMercado</h1>
+      <h1>Mercado</h1>
       <span id="itemCountLabel">0 itens no catálogo</span>
     </div>
   </div>
   <div class="topbar-actions">
-    <button class="icon-btn" id="btnBackup" title="Backup">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <button class="icon-btn" id="btnBackup" title="Configurações">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
     </button>
     <button class="icon-btn" id="btnCalc" title="Calculadora">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 7h8M8 11h1M12 11h1M16 11h1M8 15h1M12 15h1M16 15h1M8 18h1M12 18h1M16 18h1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -343,6 +404,12 @@ button{font-family:inherit;}
   </div>
 </div>
 
+<div class="mode-toggle" id="modeToggle">
+  <button class="mode-btn" data-mode="wish">🏠 Em casa</button>
+  <button class="mode-btn" data-mode="shop">🛒 No mercado</button>
+</div>
+<div class="mode-hint" id="modeHint"></div>
+
 <div class="categories" id="categoryChips"></div>
 
 <div class="section-label"><span id="gridLabel">Todos os produtos</span><span id="gridCount"></span></div>
@@ -356,7 +423,21 @@ button{font-family:inherit;}
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
 </button>
 
-<div class="receipt-bar" id="receiptBar">
+<div class="list-bar" id="wishBar">
+  <div class="rb-icon">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 4h12M6 4v15l6-3 6 3V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="count" id="wishCount">0</span>
+  </div>
+  <div class="rb-mid">
+    <div class="label">Lista de desejos</div>
+    <div class="total" id="wishSummary">Nenhum item ainda</div>
+  </div>
+  <div class="rb-chevron">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m6 15 6-6 6 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+</div>
+
+<div class="receipt-bar" id="receiptBar" style="display:none">
   <div class="rb-icon">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 8h14l-1.5 8.5a2 2 0 0 1-2 1.5H9a2 2 0 0 1-2-1.5L5 4H2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="21" r="1.4" fill="currentColor"/><circle cx="17" cy="21" r="1.4" fill="currentColor"/></svg>
     <span class="count" id="cartCount">0</span>
@@ -367,6 +448,22 @@ button{font-family:inherit;}
   </div>
   <div class="rb-chevron">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m6 15 6-6 6 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+</div>
+
+<!-- WISHLIST MODAL -->
+<div class="overlay" id="wishOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>🏠 Lista de desejos</h2><button class="icon-btn" data-close="wishOverlay">✕</button></div>
+    <div class="sheet-body">
+      <p class="hint" style="margin-top:-4px">Monte em casa o que precisa comprar. No mercado, toque em "Comprar" pra informar o preço da prateleira e mandar pro carrinho.</p>
+      <div id="wishLines"></div>
+      <div class="row-btns">
+        <button class="btn" id="btnClearWish">🗑 Limpar lista</button>
+        <button class="btn primary" id="btnGoShopping">🛒 Ir pro mercado</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -382,7 +479,7 @@ button{font-family:inherit;}
       <div id="cartLines"></div>
       <div class="receipt-divider"></div>
       <div class="rtotal-row"><span class="l">Total</span><span class="v" id="receiptTotal">R$ 0,00</span></div>
-      <div class="rmeta"><span id="receiptItemsMeta">0 itens</span><span>LISTAMERCADO</span></div>
+      <div class="rmeta"><span id="receiptItemsMeta">0 itens</span><span>MERCADO</span></div>
     </div>
     <div class="sheet-body">
       <div class="row-btns">
@@ -470,14 +567,15 @@ button{font-family:inherit;}
 <div class="overlay" id="backupOverlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-head"><h2>Backup do catálogo</h2><button class="icon-btn" data-close="backupOverlay">✕</button></div>
+    <div class="sheet-head"><h2>⚙ Configurações</h2><button class="icon-btn" data-close="backupOverlay">✕</button></div>
     <div class="sheet-body">
-      <p class="hint">Exporte seu catálogo (produtos e preços) em JSON para guardar ou transferir para outro aparelho. A importação substitui o catálogo atual.</p>
+      <p class="hint">Exporte tudo — catálogo de produtos, categorias personalizadas e preços — em um único arquivo JSON. Leve esse arquivo pra outro aparelho e importe lá pra ter a mesma base configurada.</p>
       <div class="backup-actions">
-        <button class="btn primary" id="btnExportJson">⬇ Exportar JSON</button>
-        <button class="btn" id="btnImportJson">⬆ Importar JSON</button>
+        <button class="btn primary" id="btnExportJson">⬇ Exportar configurações</button>
+        <button class="btn" id="btnImportJson">⬆ Importar configurações</button>
         <button class="btn danger" id="btnResetJson">↺ Restaurar catálogo padrão</button>
       </div>
+      <p class="hint">A importação substitui o catálogo, as categorias personalizadas e o carrinho/lista atuais pelos do arquivo.</p>
       <input type="file" id="fileImport" class="file-input" accept="application/json">
     </div>
   </div>
@@ -637,12 +735,22 @@ const EMOJI_ALL = [...new Set(Object.values(EMOJI_LIBRARY).flat())];
 /* ================= STATE ================= */
 const LS_PRODUCTS = "mercado_products_v1";
 const LS_CART = "mercado_cart_v1";
+const LS_WISHLIST = "mercado_wishlist_v1";
+const LS_MODE = "mercado_mode_v1";
 
 let products = loadProducts();
 let cart = loadCart();
+let wishlist = loadWishlist();
+let mode = localStorage.getItem(LS_MODE) || 'wish';
 let activeCategory = "all";
 let searchTerm = "";
 const qtyDraft = {}; // productId -> pending qty before adding
+
+function loadWishlist(){
+  try{ const raw = localStorage.getItem(LS_WISHLIST); if(raw) return JSON.parse(raw); }catch(e){}
+  return [];
+}
+function saveWishlist(){ localStorage.setItem(LS_WISHLIST, JSON.stringify(wishlist)); }
 
 function loadProducts(){
   try{
@@ -677,6 +785,26 @@ function renderChips(){
   document.getElementById('chipAddCat').addEventListener('click', ()=> openCategoryModal());
 }
 
+/* ================= MODE (Em casa / No mercado) ================= */
+function setMode(m){
+  mode = m;
+  localStorage.setItem(LS_MODE, m);
+  document.querySelectorAll('.mode-btn').forEach(b=>{
+    const active = b.dataset.mode===m;
+    b.classList.toggle('active', active);
+    b.classList.toggle('shop-active', active && m==='shop');
+  });
+  document.getElementById('modeHint').textContent = m==='wish'
+    ? 'Monte sua lista em casa — sem preço, só o que precisa comprar.'
+    : 'No mercado: informe o preço da prateleira ao adicionar ao carrinho.';
+  document.getElementById('wishBar').style.display = m==='wish' ? 'flex' : 'none';
+  document.getElementById('receiptBar').style.display = m==='shop' ? 'flex' : 'none';
+  renderGrid();
+}
+document.querySelectorAll('.mode-btn').forEach(b=>{
+  b.addEventListener('click', ()=> setMode(b.dataset.mode));
+});
+
 /* ================= RENDER: PRODUCT GRID ================= */
 function renderGrid(){
   const grid = document.getElementById('productGrid');
@@ -695,28 +823,36 @@ function renderGrid(){
 
   grid.innerHTML = list.map(p=>{
     const cat = catMap[p.category] || {color:'#888'};
-    const inCart = cart.some(c=>c.id===p.id);
     const q = qtyDraft[p.id] || 1;
+    const inWish = wishlist.some(w=>w.id===p.id);
+    const inCart = cart.some(c=>c.id===p.id);
+    const priceRow = mode==='shop' ? `
+      <div class="price-row">
+        <span>R$</span>
+        <input type="number" step="0.01" min="0" value="${p.price.toFixed(2)}" data-price="${p.id}">
+      </div>` : '';
+    const addBtn = mode==='wish'
+      ? `<button class="add-btn ${inWish?'in-cart':''}" data-addwish="${p.id}" title="Adicionar à lista de desejos">
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 4h12M6 4v15l6-3 6 3V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+         </button>`
+      : `<button class="add-btn ${inCart?'in-cart':''}" data-add="${p.id}" title="Adicionar ao carrinho">
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+         </button>`;
     return `
     <div class="card" data-id="${p.id}">
       <button class="edit-fab" data-edit="${p.id}" title="Editar produto">✎</button>
       <span class="cat-tag" style="background:${cat.color}"></span>
       <div class="icon">${p.icon||'🛒'}</div>
       <div class="name">${p.name}</div>
-      <div class="unit">preço por ${unitLabel(p.unit)}</div>
-      <div class="price-row">
-        <span>R$</span>
-        <input type="number" step="0.01" min="0" value="${p.price.toFixed(2)}" data-price="${p.id}">
-      </div>
+      <div class="unit">${mode==='shop' ? 'preço por ' : 'vendido por '}${unitLabel(p.unit)}</div>
+      ${priceRow}
       <div class="qty-row">
         <div class="stepper">
           <button data-dec="${p.id}">−</button>
           <span class="qtyval" id="qty-${p.id}">${q}</span>
           <button data-inc="${p.id}">+</button>
         </div>
-        <button class="add-btn ${inCart?'in-cart':''}" data-add="${p.id}" title="Adicionar ao carrinho">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-        </button>
+        ${addBtn}
       </div>
     </div>`;
   }).join('');
@@ -748,7 +884,17 @@ function renderGrid(){
     qtyDraft[id] = 1;
     document.getElementById('qty-'+id).textContent = 1;
     el.classList.add('in-cart');
-    showToast(prod.icon+' '+prod.name+' adicionado');
+    showToast(prod.icon+' '+prod.name+' adicionado ao carrinho');
+  }));
+  grid.querySelectorAll('[data-addwish]').forEach(el=>el.addEventListener('click', ()=>{
+    const id = el.dataset.addwish;
+    const prod = products.find(p=>p.id===id);
+    const q = qtyDraft[id] || 1;
+    addToWishlist(prod, q);
+    qtyDraft[id] = 1;
+    document.getElementById('qty-'+id).textContent = 1;
+    el.classList.add('in-cart');
+    showToast(prod.icon+' '+prod.name+' adicionado à lista');
   }));
   grid.querySelectorAll('[data-edit]').forEach(el=>el.addEventListener('click', (ev)=>{
     ev.stopPropagation();
@@ -829,6 +975,108 @@ document.getElementById('btnClearCart').addEventListener('click', ()=>{
   if(confirm('Limpar todos os itens do carrinho?')){ cart=[]; saveCart(); renderCart(); renderGrid(); }
 });
 
+/* ================= WISHLIST LOGIC ================= */
+function addToWishlist(prod, qty){
+  const existing = wishlist.find(w=>w.id===prod.id);
+  if(existing){ existing.qty += qty; }
+  else{ wishlist.push({id:prod.id, qty:qty}); }
+  saveWishlist();
+  renderWish();
+}
+function wishCount(){ return wishlist.reduce((s,w)=>s+w.qty, 0); }
+
+function renderWish(){
+  document.getElementById('wishCount').textContent = wishCount();
+  document.getElementById('wishSummary').textContent = wishlist.length===0
+    ? 'Nenhum item ainda' : wishlist.length + (wishlist.length===1?' produto na lista':' produtos na lista');
+
+  const wrap = document.getElementById('wishLines');
+  if(wishlist.length===0){
+    wrap.innerHTML = '<div style="text-align:center; padding:24px 0; color:var(--muted); font-size:13px;">Sua lista está vazia.<br>Adicione produtos no modo "Em casa".</div>';
+    return;
+  }
+  wrap.innerHTML = wishlist.map(w=>{
+    const prod = products.find(p=>p.id===w.id) || {name:'Produto removido', icon:'❔', unit:'un', price:0};
+    return `
+    <div class="wline" data-wid="${w.id}">
+      <div class="ic">${prod.icon||'🛒'}</div>
+      <div class="info">
+        <div class="n">${prod.name}</div>
+        <div class="m">${unitLabel(prod.unit)}</div>
+      </div>
+      <div class="stepper">
+        <button data-wdec="${w.id}">−</button>
+        <span class="qtyval" style="width:24px">${w.qty}</span>
+        <button data-winc="${w.id}">+</button>
+      </div>
+      <button class="buy-btn" data-buy="${w.id}">✓ Comprar</button>
+      <button class="rm" data-wrm="${w.id}">✕</button>
+    </div>
+    <div class="wline-buyform" id="buyform-${w.id}">
+      <span style="font-size:12px;color:var(--muted)">R$</span>
+      <input type="number" step="0.01" min="0" placeholder="Preço na prateleira" id="buyprice-${w.id}" value="${prod.price? prod.price.toFixed(2):''}">
+      <button class="ok" data-buyok="${w.id}">Confirmar</button>
+      <button class="cancel" data-buycancel="${w.id}">Cancelar</button>
+    </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('[data-winc]').forEach(el=>el.addEventListener('click', ()=>{
+    const it = wishlist.find(w=>w.id===el.dataset.winc); it.qty++; saveWishlist(); renderWish();
+  }));
+  wrap.querySelectorAll('[data-wdec]').forEach(el=>el.addEventListener('click', ()=>{
+    const id = el.dataset.wdec;
+    const it = wishlist.find(w=>w.id===id);
+    if(it.qty<=1){
+      const prod = products.find(p=>p.id===id);
+      if(!confirm('Remover "'+(prod?prod.name:'item')+'" da lista?')) return;
+      wishlist = wishlist.filter(w=>w.id!==id);
+    } else { it.qty--; }
+    saveWishlist(); renderWish();
+  }));
+  wrap.querySelectorAll('[data-wrm]').forEach(el=>el.addEventListener('click', ()=>{
+    const id = el.dataset.wrm;
+    const prod = products.find(p=>p.id===id);
+    if(!confirm('Remover "'+(prod?prod.name:'item')+'" da lista?')) return;
+    wishlist = wishlist.filter(w=>w.id!==id);
+    saveWishlist(); renderWish();
+  }));
+  wrap.querySelectorAll('[data-buy]').forEach(el=>el.addEventListener('click', ()=>{
+    document.querySelectorAll('.wline-buyform').forEach(f=>f.classList.remove('show'));
+    document.getElementById('buyform-'+el.dataset.buy).classList.add('show');
+    document.getElementById('buyprice-'+el.dataset.buy).focus();
+  }));
+  wrap.querySelectorAll('[data-buycancel]').forEach(el=>el.addEventListener('click', ()=>{
+    document.getElementById('buyform-'+el.dataset.buycancel).classList.remove('show');
+  }));
+  wrap.querySelectorAll('[data-buyok]').forEach(el=>el.addEventListener('click', ()=>{
+    const id = el.dataset.buyok;
+    const priceInput = document.getElementById('buyprice-'+id);
+    const price = parseFloat((priceInput.value||'0').replace(',','.'));
+    if(isNaN(price) || price<0){ showToast('Informe um preço válido'); return; }
+    const it = wishlist.find(w=>w.id===id);
+    const prod = products.find(p=>p.id===id);
+    addToCart(prod || {id, name:'Produto', icon:'🛒', price}, it.qty);
+    if(prod){ prod.price = price; saveProducts(); }
+    const cartItem = cart.find(c=>c.id===id);
+    if(cartItem) cartItem.price = price;
+    saveCart();
+    wishlist = wishlist.filter(w=>w.id!==id);
+    saveWishlist(); renderWish(); renderCart(); renderGrid();
+    showToast((prod?prod.icon:'🛒')+' Adicionado ao carrinho ✓');
+  }));
+}
+
+document.getElementById('wishBar').addEventListener('click', ()=>{ renderWish(); openModal('wishOverlay'); });
+document.getElementById('btnClearWish').addEventListener('click', ()=>{
+  if(wishlist.length===0) return;
+  if(confirm('Limpar toda a lista de desejos?')){ wishlist=[]; saveWishlist(); renderWish(); renderGrid(); }
+});
+document.getElementById('btnGoShopping').addEventListener('click', ()=>{
+  closeModal('wishOverlay');
+  setMode('shop');
+  showToast('Modo "No mercado" ativado 🛒');
+});
+
 /* ================= PDF EXPORT ================= */
 document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   if(cart.length===0){ showToast('Carrinho vazio'); return; }
@@ -871,7 +1119,7 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   doc.text(brl(cartTotal()), 192, y, {align:'right'});
   y += 6;
   doc.setFont('courier','normal'); doc.setFontSize(9); doc.setTextColor(130);
-  doc.text(cartCount() + ' itens · gerado pelo ListaMercado', marginX, y);
+  doc.text(cartCount() + ' itens · gerado pelo Mercado', marginX, y);
 
   doc.save('lista-de-compras-' + new Date().toISOString().slice(0,10) + '.pdf');
   showToast('PDF exportado');
@@ -1118,17 +1366,18 @@ document.getElementById('btnCalc').addEventListener('click', ()=>{
   openModal('calcOverlay');
 });
 
-/* ================= BACKUP (EXPORT / IMPORT / RESET) ================= */
+/* ================= CONFIGURAÇÕES (EXPORT / IMPORT / RESET) ================= */
 document.getElementById('btnBackup').addEventListener('click', ()=> openModal('backupOverlay'));
 document.getElementById('btnExportJson').addEventListener('click', ()=>{
-  const data = { exportedAt:new Date().toISOString(), products, cart };
+  const customCategories = loadCustomCategories();
+  const data = { app:'Mercado', version:1, exportedAt:new Date().toISOString(), products, categories:customCategories, cart, wishlist };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'mercado-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.href = url; a.download = 'mercado-config-' + new Date().toISOString().slice(0,10) + '.json';
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
-  showToast('Backup exportado ✓');
+  showToast('Configurações exportadas ✓');
 });
 document.getElementById('btnImportJson').addEventListener('click', ()=> document.getElementById('fileImport').click());
 document.getElementById('fileImport').addEventListener('change', (e)=>{
@@ -1138,12 +1387,18 @@ document.getElementById('fileImport').addEventListener('change', (e)=>{
     try{
       const data = JSON.parse(reader.result);
       if(!Array.isArray(data.products)) throw new Error('formato inválido');
-      if(confirm('Importar este arquivo vai substituir seu catálogo atual. Continuar?')){
+      if(confirm('Importar este arquivo vai substituir seu catálogo, categorias e listas atuais. Continuar?')){
         products = data.products;
-        if(Array.isArray(data.cart)) cart = data.cart;
-        saveProducts(); saveCart();
-        renderChips(); renderGrid(); renderCart();
-        showToast('Catálogo importado ✓');
+        if(Array.isArray(data.categories)){
+          CATEGORIES = [...BASE_CATEGORIES, ...data.categories];
+          refreshCatMap();
+          saveCustomCategories(data.categories);
+        }
+        if(Array.isArray(data.cart)) cart = data.cart; else cart = [];
+        if(Array.isArray(data.wishlist)) wishlist = data.wishlist; else wishlist = [];
+        saveProducts(); saveCart(); saveWishlist();
+        fillCategorySelect(); renderChips(); renderGrid(); renderCart(); renderWish();
+        showToast('Configurações importadas ✓');
         closeModal('backupOverlay');
       }
     }catch(err){ showToast('Arquivo inválido'); }
@@ -1152,9 +1407,12 @@ document.getElementById('fileImport').addEventListener('change', (e)=>{
   reader.readAsText(file);
 });
 document.getElementById('btnResetJson').addEventListener('click', ()=>{
-  if(confirm('Restaurar o catálogo padrão? Produtos personalizados serão perdidos.')){
+  if(confirm('Restaurar o catálogo padrão? Produtos e categorias personalizados serão perdidos.')){
     products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
-    saveProducts(); renderChips(); renderGrid();
+    CATEGORIES = [...BASE_CATEGORIES];
+    refreshCatMap();
+    saveCustomCategories([]);
+    saveProducts(); fillCategorySelect(); renderChips(); renderGrid();
     showToast('Catálogo padrão restaurado');
     closeModal('backupOverlay');
   }
@@ -1194,9 +1452,10 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
 /* ================= INIT ================= */
 fillCategorySelect();
 renderChips();
-renderGrid();
 renderCart();
+renderWish();
 renderCalc();
+setMode(mode);
 
 /* ================= PWA: SERVICE WORKER ================= */
 if('serviceWorker' in navigator){
