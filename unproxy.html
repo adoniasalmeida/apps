@@ -7,295 +7,386 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg: #0a0d12;
-    --panel: #10141c;
-    --panel-2: #141924;
-    --border: #1e2530;
-    --border-soft: #171d27;
-    --text: #e7edf5;
-    --muted: #7c8797;
-    --dim: #4b5563;
-    --amber: #ffb454;
-    --amber-dim: #7a5a2c;
-    --teal: #45d9c4;
-    --red: #ff6b6b;
-    --mono: 'JetBrains Mono', ui-monospace, monospace;
-    --disp: 'Space Grotesk', sans-serif;
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:
-      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,180,84,0.07), transparent 60%),
-      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(69,217,196,0.05), transparent 55%),
-      var(--bg);
-    color:var(--text);
-    font-family:var(--disp);
-    min-height:100vh;
-    padding:56px 20px 80px;
-  }
-  .wrap{max-width:760px;margin:0 auto;}
+:root{
+  --bg: #0a0d12;
+  --panel: #10141c;
+  --panel-2: #141924;
+  --border: #1e2530;
+  --border-soft: #171d27;
+  --text: #e7edf5;
+  --muted: #7c8797;
+  --dim: #4b5563;
+  --amber: #ffb454;
+  --amber-dim: #7a5a2c;
+  --teal: #45d9c4;
+  --red: #ff6b6b;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --disp: 'Space Grotesk', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,180,84,0.07), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(69,217,196,0.05), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--disp);
+  min-height:100vh;
+  padding:56px 20px 80px;
+}
+.wrap{max-width:760px;margin:0 auto;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:34px;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px 2px rgba(255,180,84,0.6);}
+.brand span{font-family:var(--mono);font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);}
+h1{
+  font-size:clamp(28px,4.2vw,38px);
+  font-weight:700;
+  letter-spacing:-0.02em;
+  margin:0 0 10px;
+  line-height:1.15;
+}
+h1 em{font-style:normal;color:var(--amber);}
+.sub{
+  color:var(--muted);
+  font-size:15px;
+  line-height:1.6;
+  max-width:56ch;
+  margin:0 0 28px;
+}
+.sub code{
+  font-family:var(--mono);
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  padding:1px 6px;
+  border-radius:4px;
+  font-size:13px;
+  color:var(--teal);
+}
 
-  .brand{display:flex;align-items:center;gap:10px;margin-bottom:34px;}
-  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px 2px rgba(255,180,84,0.6);}
-  .brand span{font-family:var(--mono);font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);}
+/* tabs */
+.tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--border-soft);}
+.tab-btn{
+  background:none;border:none;
+  font-family:var(--disp);font-weight:600;font-size:13.5px;
+  color:var(--dim);
+  padding:10px 4px 12px;
+  margin-right:18px;
+  cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:color .12s, border-color .12s;
+}
+.tab-btn:hover{color:var(--muted);}
+.tab-btn.active{color:var(--text);border-color:var(--amber);}
+.tab-btn .tag-mode{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
+  padding:1px 6px;border-radius:8px;margin-left:7px;
+  background:#1c2230;color:var(--dim);vertical-align:middle;
+}
+.tab-btn.active .tag-mode.local{background:#1b2a26;color:var(--teal);}
+.tab-btn.active .tag-mode.net{background:#2a2418;color:var(--amber);}
 
-  h1{
-    font-size:clamp(28px,4.2vw,38px);
-    font-weight:700;
-    letter-spacing:-0.02em;
-    margin:0 0 10px;
-    line-height:1.15;
-  }
-  h1 em{font-style:normal;color:var(--amber);}
-  .sub{
-    color:var(--muted);
-    font-size:15px;
-    line-height:1.6;
-    max-width:56ch;
-    margin:0 0 36px;
-  }
-  .sub code{
-    font-family:var(--mono);
-    background:var(--panel-2);
-    border:1px solid var(--border);
-    padding:1px 6px;
-    border-radius:4px;
-    font-size:13px;
-    color:var(--teal);
-  }
+.view{display:none;}
+.view.active{display:block;}
 
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:14px;
-    padding:20px;
-    position:relative;
-  }
-  .panel-label{
-    display:flex;justify-content:space-between;align-items:center;
-    margin-bottom:12px;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-  .panel-label span.title{
-    font-family:var(--mono);
-    font-size:11px;
-    letter-spacing:0.1em;
-    text-transform:uppercase;
-    color:var(--dim);
-  }
-  .label-actions{display:flex;gap:14px;align-items:center;}
-  .label-actions button{
-    background:none;border:none;color:var(--dim);
-    font-family:var(--mono);font-size:11px;cursor:pointer;
-    text-decoration:underline;text-underline-offset:3px;
-  }
-  .label-actions button:hover{color:var(--muted);}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px;
+  position:relative;
+}
+.panel-label{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:12px;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.panel-label span.title{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--dim);
+}
+.label-actions{display:flex;gap:14px;align-items:center;}
+.label-actions button{
+  background:none;border:none;color:var(--dim);
+  font-family:var(--mono);font-size:11px;cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px;
+}
+.label-actions button:hover{color:var(--muted);}
+textarea{
+  width:100%;
+  min-height:120px;
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:13px;
+  line-height:1.6;
+  padding:14px;
+  resize:vertical;
+  outline:none;
+}
+textarea::placeholder{color:var(--dim);}
+textarea:focus{border-color:var(--amber-dim);}
 
-  textarea{
-    width:100%;
-    min-height:120px;
-    background:var(--panel-2);
-    border:1px solid var(--border);
-    border-radius:10px;
-    color:var(--text);
-    font-family:var(--mono);
-    font-size:13px;
-    line-height:1.6;
-    padding:14px;
-    resize:vertical;
-    outline:none;
-  }
-  textarea::placeholder{color:var(--dim);}
-  textarea:focus{border-color:var(--amber-dim);}
+input[type=text].url-single{
+  width:100%;
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:13.5px;
+  padding:14px;
+  outline:none;
+}
+input[type=text].url-single:focus{border-color:var(--amber-dim);}
+input[type=text].url-single::placeholder{color:var(--dim);}
 
-  .row{display:flex;gap:12px;margin-top:14px;align-items:center;flex-wrap:wrap;}
+.row{display:flex;gap:12px;margin-top:14px;align-items:center;flex-wrap:wrap;}
+button.primary{
+  background:var(--amber);
+  color:#1a1206;
+  border:none;
+  font-family:var(--disp);
+  font-weight:600;
+  font-size:14px;
+  padding:11px 22px;
+  border-radius:9px;
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+button.primary:hover{transform:translateY(-1px);box-shadow:0 4px 18px -4px rgba(255,180,84,0.45);}
+button.primary:active{transform:translateY(0);}
+button.primary:disabled{opacity:.5;cursor:wait;transform:none;box-shadow:none;}
+button.ghost{
+  background:none;
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:var(--disp);
+  font-weight:600;
+  font-size:13px;
+  padding:10px 18px;
+  border-radius:9px;
+  cursor:pointer;
+  transition:border-color .12s ease, color .12s ease;
+}
+button.ghost:hover{border-color:var(--teal);color:var(--teal);}
+.hint{font-family:var(--mono);font-size:12px;color:var(--dim);}
+.filename-tag{
+  font-family:var(--mono);font-size:11px;color:var(--teal);
+  background:#0f1f1c;border:1px solid #1c3530;
+  padding:3px 9px;border-radius:6px;
+}
 
-  button.primary{
-    background:var(--amber);
-    color:#1a1206;
-    border:none;
-    font-family:var(--disp);
-    font-weight:600;
-    font-size:14px;
-    padding:11px 22px;
-    border-radius:9px;
-    cursor:pointer;
-    transition:transform .12s ease, box-shadow .12s ease;
-  }
-  button.primary:hover{transform:translateY(-1px);box-shadow:0 4px 18px -4px rgba(255,180,84,0.45);}
-  button.primary:active{transform:translateY(0);}
+/* summary */
+.summary{
+  margin-top:26px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.summary .count{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--muted);
+}
+.summary .count b{color:var(--teal);font-weight:600;}
+.export-row{display:flex;gap:10px;}
 
-  button.ghost{
-    background:none;
-    border:1px solid var(--border);
-    color:var(--text);
-    font-family:var(--disp);
-    font-weight:600;
-    font-size:13px;
-    padding:10px 18px;
-    border-radius:9px;
-    cursor:pointer;
-    transition:border-color .12s ease, color .12s ease;
-  }
-  button.ghost:hover{border-color:var(--teal);color:var(--teal);}
-
-  .hint{font-family:var(--mono);font-size:12px;color:var(--dim);}
-  .filename-tag{
-    font-family:var(--mono);font-size:11px;color:var(--teal);
-    background:#0f1f1c;border:1px solid #1c3530;
-    padding:3px 9px;border-radius:6px;
-  }
-
-  /* summary */
-  .summary{
-    margin-top:26px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:10px;
-  }
-  .summary .count{
-    font-family:var(--mono);
-    font-size:12px;
-    color:var(--muted);
-  }
-  .summary .count b{color:var(--teal);font-weight:600;}
-  .export-row{display:flex;gap:10px;}
-
-  /* results */
-  .results{margin-top:16px;display:flex;flex-direction:column;gap:14px;}
-
-  .card{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:12px;
-    overflow:hidden;
-  }
-  .card.ok{border-color:#22301f;}
-  .card.err{border-color:#301c1c;}
-
-  .card-row{
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
-    padding:14px 16px;
-    font-family:var(--mono);
-    font-size:12.5px;
-    line-height:1.5;
-    word-break:break-all;
-  }
-  .card-row + .card-row{border-top:1px solid var(--border-soft);}
-  .tag{
-    flex:0 0 auto;
-    font-size:10px;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    padding:3px 7px;
-    border-radius:5px;
-    margin-top:1px;
-    font-family:var(--disp);
-    font-weight:600;
-  }
-  .tag.in{background:#1c2230;color:var(--muted);}
-  .tag.out{background:#1b2a26;color:var(--teal);}
-  .tag.fail{background:#2a1c1c;color:var(--red);}
-  .tag.meta{background:#20232b;color:var(--dim);}
-
-  .card-text{flex:1;color:var(--text);}
-  .card-text.dim{color:var(--muted);}
-  .card-text.out{color:var(--teal);}
-
-  .copy-btn{
-    flex:0 0 auto;
-    background:none;
-    border:1px solid var(--border);
-    color:var(--dim);
-    font-family:var(--disp);
-    font-size:11px;
-    padding:4px 9px;
-    border-radius:6px;
-    cursor:pointer;
-  }
-  .copy-btn:hover{color:var(--text);border-color:var(--dim);}
-  .copy-btn.copied{color:var(--teal);border-color:var(--teal);}
-
-  .meta-line{
-    padding:8px 16px;
-    font-family:var(--mono);
-    font-size:11.5px;
-    color:var(--dim);
-    background:var(--panel-2);
-    border-bottom:1px solid var(--border-soft);
-    word-break:break-all;
-  }
-
-  .empty{
-    text-align:center;
-    color:var(--dim);
-    font-family:var(--mono);
-    font-size:12px;
-    padding:30px 0 0;
-  }
-
-  footer{
-    margin-top:50px;
-    font-family:var(--mono);
-    font-size:11px;
-    color:var(--dim);
-    text-align:center;
-  }
-
-  input[type=file]{display:none;}
+/* results */
+.results{margin-top:16px;display:flex;flex-direction:column;gap:14px;}
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+}
+.card.ok{border-color:#22301f;}
+.card.err{border-color:#301c1c;}
+.card.mid{border-color:#302a1c;}
+.card-row{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:14px 16px;
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.5;
+  word-break:break-all;
+}
+.card-row + .card-row{border-top:1px solid var(--border-soft);}
+.tag{
+  flex:0 0 auto;
+  font-size:10px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  padding:3px 7px;
+  border-radius:5px;
+  margin-top:1px;
+  font-family:var(--disp);
+  font-weight:600;
+}
+.tag.in{background:#1c2230;color:var(--muted);}
+.tag.out{background:#1b2a26;color:var(--teal);}
+.tag.fail{background:#2a1c1c;color:var(--red);}
+.tag.meta{background:#20232b;color:var(--dim);}
+.tag.hop{background:#2a2418;color:var(--amber);}
+.tag.final{background:#1b2a26;color:var(--teal);}
+.card-text{flex:1;color:var(--text);}
+.card-text.dim{color:var(--muted);}
+.card-text.out{color:var(--teal);}
+.copy-btn{
+  flex:0 0 auto;
+  background:none;
+  border:1px solid var(--border);
+  color:var(--dim);
+  font-family:var(--disp);
+  font-size:11px;
+  padding:4px 9px;
+  border-radius:6px;
+  cursor:pointer;
+}
+.copy-btn:hover{color:var(--text);border-color:var(--dim);}
+.copy-btn.copied{color:var(--teal);border-color:var(--teal);}
+.meta-line{
+  padding:8px 16px;
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--dim);
+  background:var(--panel-2);
+  border-bottom:1px solid var(--border-soft);
+  word-break:break-all;
+}
+.empty{
+  text-align:center;
+  color:var(--dim);
+  font-family:var(--mono);
+  font-size:12px;
+  padding:30px 0 0;
+}
+.error-box{
+  text-align:center;color:var(--red);
+  background:#1c1214;border:1px solid #301c1c;
+  border-radius:10px;padding:16px;
+  font-family:var(--mono);font-size:12.5px;margin-top:16px;
+}
+footer{
+  margin-top:50px;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--dim);
+  text-align:center;
+}
+input[type=file]{display:none;}
 </style>
 </head>
 <body>
 <div class="wrap">
-
   <div class="brand"><div class="dot"></div><span>proxy // ferramentas</span></div>
-
   <h1>unproxy<em>.</em><br>revela o link real.</h1>
   <p class="sub">
-    Cole URLs de proxy, ou carregue um arquivo <code>.txt</code>/<code>.m3u</code>/<code>.m3u8</code> inteiro.
-    A ferramenta decodifica em lote e deixa exportar de volta no mesmo formato, já com os links reais.
+    Cole URLs de proxy, carregue um arquivo, ou rastreie um link até o destino final.
   </p>
 
-  <div class="panel">
-    <div class="panel-label">
-      <span class="title">entrada</span>
-      <div class="label-actions">
-        <span class="filename-tag" id="filename-tag" style="display:none;"></span>
-        <button id="upload-btn">carregar arquivo</button>
-        <button id="sample-btn">usar exemplo</button>
-        <input type="file" id="file-input" accept=".txt,.m3u,.m3u8">
+  <div class="tabs">
+    <button class="tab-btn active" data-view="decode">decodificar <span class="tag-mode local">local</span></button>
+    <button class="tab-btn" data-view="trace">rastrear <span class="tag-mode net">rede</span></button>
+  </div>
+
+  <!-- ===================== ABA: DECODIFICAR (original) ===================== -->
+  <div class="view active" id="view-decode">
+    <p class="sub" style="margin-top:-14px;">
+      Cole URLs de proxy, ou carregue um arquivo <code>.txt</code>/<code>.m3u</code>/<code>.m3u8</code> inteiro.
+      A ferramenta decodifica em lote e deixa exportar de volta no mesmo formato, já com os links reais.
+    </p>
+
+    <div class="panel">
+      <div class="panel-label">
+        <span class="title">entrada</span>
+        <div class="label-actions">
+          <span class="filename-tag" id="filename-tag" style="display:none;"></span>
+          <button id="upload-btn">carregar arquivo</button>
+          <button id="sample-btn">usar exemplo</button>
+          <input type="file" id="file-input" accept=".txt,.m3u,.m3u8">
+        </div>
+      </div>
+      <textarea id="input" placeholder="https://seu-proxy.com/proxy/hls/aHR0cDovL2V4ZW1wbG8uY29tL2xpdmUvMTIzLm0zdTg.m3u8
+(uma URL por linha, ou cole uma lista .m3u inteira — linhas #EXTINF são preservadas)"></textarea>
+      <div class="row">
+        <button class="primary" id="decode-btn">decodificar em lote ↴</button>
+        <span class="hint">Ctrl/Cmd + Enter também funciona</span>
       </div>
     </div>
-    <textarea id="input" placeholder="https://seu-proxy.com/proxy/hls/aHR0cDovL2V4ZW1wbG8uY29tL2xpdmUvMTIzLm0zdTg.m3u8
 
-(uma URL por linha, ou cole uma lista .m3u inteira — linhas #EXTINF são preservadas)"></textarea>
-    <div class="row">
-      <button class="primary" id="decode-btn">decodificar em lote ↴</button>
-      <span class="hint">Ctrl/Cmd + Enter também funciona</span>
+    <div class="summary" id="summary" style="display:none;">
+      <span class="count" id="count-text"></span>
+      <div class="export-row">
+        <button class="ghost" id="export-m3u">baixar .m3u</button>
+        <button class="ghost" id="export-txt">baixar .txt</button>
+      </div>
     </div>
+
+    <div class="results" id="results"></div>
   </div>
 
-  <div class="summary" id="summary" style="display:none;">
-    <span class="count" id="count-text"></span>
-    <div class="export-row">
-      <button class="ghost" id="export-m3u">baixar .m3u</button>
-      <button class="ghost" id="export-txt">baixar .txt</button>
+  <!-- ===================== ABA: RASTREAR (novo) ===================== -->
+  <div class="view" id="view-trace">
+    <p class="sub" style="margin-top:-14px;">
+      Cola um link encurtado ou de redirecionamento e segue cada salto real via HTTP até o destino final.
+      Essa aba faz uma chamada de rede (worker <code>cors.adoniasalmeida.workers.dev</code>) — é a única parte do unproxy que sai do navegador.
+    </p>
+
+    <div class="panel">
+      <div class="panel-label">
+        <span class="title">link a rastrear</span>
+      </div>
+      <input type="text" class="url-single" id="trace-input" placeholder="https://bit.ly/exemplo ou link de proxy...">
+      <div class="row">
+        <button class="primary" id="trace-btn">rastrear rota ↴</button>
+        <span class="hint">Enter também funciona</span>
+      </div>
     </div>
+
+    <div class="summary" id="trace-summary" style="display:none;">
+      <span class="count" id="trace-count-text"></span>
+      <div class="export-row">
+        <button class="ghost" id="trace-copy-final">copiar link final</button>
+      </div>
+    </div>
+
+    <div class="results" id="trace-results"></div>
   </div>
 
-  <div class="results" id="results"></div>
-
-  <footer>tudo roda no seu navegador — nenhuma URL é enviada a servidor nenhum.</footer>
+  <footer id="footer-text">tudo roda no seu navegador — nenhuma URL é enviada a servidor nenhum.</footer>
 </div>
 
 <script>
+/* ===================== TABS ===================== */
+const tabBtns = document.querySelectorAll('.tab-btn');
+const views = { decode: document.getElementById('view-decode'), trace: document.getElementById('view-trace') };
+const footerText = document.getElementById('footer-text');
+const FOOTER = {
+  decode: 'tudo roda no seu navegador — nenhuma URL é enviada a servidor nenhum.',
+  trace: 'esta aba envia a URL ao worker cors.adoniasalmeida.workers.dev para seguir os redirecionamentos.'
+};
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    Object.values(views).forEach(v => v.classList.remove('active'));
+    views[btn.dataset.view].classList.add('active');
+    footerText.textContent = FOOTER[btn.dataset.view];
+  });
+});
+
+/* ===================== ABA DECODIFICAR (lógica original, intacta) ===================== */
 const input = document.getElementById('input');
 const resultsEl = document.getElementById('results');
 const decodeBtn = document.getElementById('decode-btn');
@@ -319,7 +410,6 @@ sampleBtn.addEventListener('click', () => {
 });
 
 uploadBtn.addEventListener('click', () => fileInput.click());
-
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -358,11 +448,9 @@ function looksLikeUrl(s){
 function candidateSegments(raw){
   const candidates = [];
   const trimmed = raw.trim();
-
   if (/^[A-Za-z0-9+/_=-]{16,}$/.test(trimmed) && !trimmed.includes('/proxy') && !trimmed.startsWith('http')) {
     candidates.push(trimmed);
   }
-
   try {
     const url = new URL(trimmed);
     const segments = url.pathname.split('/').filter(Boolean);
@@ -375,14 +463,12 @@ function candidateSegments(raw){
     const matches = trimmed.match(/[A-Za-z0-9_-]{16,}/g) || [];
     candidates.push(...matches.sort((a,b) => b.length - a.length));
   }
-
   return [...new Set(candidates)];
 }
 
 function decodeLine(raw){
   const line = raw.trim();
   if (!line) return null;
-
   const candidates = candidateSegments(line);
   for (const c of candidates){
     try {
@@ -403,7 +489,6 @@ function decodeLine(raw){
   return { input: line, output: null, ok: false };
 }
 
-// splits input text into structured lines, preserving #EXTM3U / #EXTINF / blank lines untouched
 function processContent(text){
   const rawLines = text.split(/\r?\n/);
   return rawLines.map(line => {
@@ -425,7 +510,6 @@ function processContent(text){
 function runDecode(){
   lastLines = processContent(input.value);
   const urlLines = lastLines.filter(l => l.type === 'url');
-
   resultsEl.innerHTML = '';
 
   if (!urlLines.length){
@@ -452,7 +536,6 @@ function renderCard(res){
 
   const outRow = document.createElement('div');
   outRow.className = 'card-row';
-
   if (res.output){
     outRow.innerHTML = `
       <span class="tag out">${res.ok ? 'saída' : 'saída*'}</span>
@@ -469,6 +552,7 @@ function renderCard(res){
     outRow.innerHTML = `<span class="tag fail">falhou</span><span class="card-text dim">não encontrei um trecho base64 válido nessa linha — será mantida como está na exportação.</span>`;
   }
   card.appendChild(outRow);
+
   return card;
 }
 
@@ -510,10 +594,101 @@ exportM3uBtn.addEventListener('click', () => {
   if (!lastLines.length) return;
   download(`${currentFilename}.m3u`, buildM3U(lastLines));
 });
-
 exportTxtBtn.addEventListener('click', () => {
   if (!lastLines.length) return;
   download(`${currentFilename}.txt`, buildTXT(lastLines));
+});
+
+/* ===================== ABA RASTREAR (novo) ===================== */
+const WORKER_URL = 'https://cors.adoniasalmeida.workers.dev';
+
+const traceInput = document.getElementById('trace-input');
+const traceBtn = document.getElementById('trace-btn');
+const traceResults = document.getElementById('trace-results');
+const traceSummary = document.getElementById('trace-summary');
+const traceCountText = document.getElementById('trace-count-text');
+const traceCopyFinalBtn = document.getElementById('trace-copy-final');
+
+let lastFinalUrl = '';
+
+traceBtn.addEventListener('click', runTrace);
+traceInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runTrace(); });
+
+function statusTagClass(status, isLast){
+  if (!status) return 'fail';
+  if (status >= 300 && status < 400) return 'hop';
+  if (isLast) return 'final';
+  return 'out';
+}
+
+async function runTrace(){
+  const target = traceInput.value.trim();
+  if (!target) { traceInput.focus(); return; }
+
+  traceResults.innerHTML = '<div class="empty">rastreando saltos…</div>';
+  traceSummary.style.display = 'none';
+  traceBtn.disabled = true;
+
+  try {
+    const endpoint = WORKER_URL.replace(/\/$/, '') + '/trace?url=' + encodeURIComponent(target);
+    const res = await fetch(endpoint);
+    const data = await res.json();
+
+    if (data.error && !data.hops){
+      traceResults.innerHTML = `<div class="error-box">${escapeHtml(data.error)}</div>`;
+      return;
+    }
+
+    renderTrace(data);
+  } catch(e){
+    traceResults.innerHTML = `<div class="error-box">falha ao conectar no worker: ${escapeHtml(e.message)}</div>`;
+  } finally {
+    traceBtn.disabled = false;
+  }
+}
+
+function renderTrace(data){
+  const { hops, final } = data;
+  lastFinalUrl = final;
+
+  traceCountText.innerHTML = `<b>${hops.length}</b> salto${hops.length === 1 ? '' : 's'} até o destino final`;
+  traceSummary.style.display = 'flex';
+
+  traceResults.innerHTML = '';
+  hops.forEach((hop, i) => {
+    const isLast = i === hops.length - 1;
+    const card = document.createElement('div');
+    card.className = 'card ' + (hop.error ? 'err' : (hop.status >= 300 && hop.status < 400 ? 'mid' : 'ok'));
+
+    const topRow = document.createElement('div');
+    topRow.className = 'card-row';
+    const tagClass = statusTagClass(hop.status, isLast);
+    const label = hop.error ? 'erro' : `hop ${i + 1} · ${hop.status ?? '???'}`;
+    topRow.innerHTML = `<span class="tag ${tagClass}">${escapeHtml(label)}</span><span class="card-text out">${escapeHtml(hop.url)}</span>`;
+    card.appendChild(topRow);
+
+    if (hop.error){
+      const errRow = document.createElement('div');
+      errRow.className = 'card-row';
+      errRow.innerHTML = `<span class="tag fail">detalhe</span><span class="card-text dim">${escapeHtml(hop.error)}</span>`;
+      card.appendChild(errRow);
+    } else if (hop.contentType || hop.server){
+      const metaRow = document.createElement('div');
+      metaRow.className = 'card-row';
+      const bits = [hop.contentType, hop.server].filter(Boolean).join(' · ');
+      metaRow.innerHTML = `<span class="tag meta">meta</span><span class="card-text dim">${escapeHtml(bits)}</span>`;
+      card.appendChild(metaRow);
+    }
+
+    traceResults.appendChild(card);
+  });
+}
+
+traceCopyFinalBtn.addEventListener('click', (e) => {
+  if (!lastFinalUrl) return;
+  navigator.clipboard.writeText(lastFinalUrl);
+  e.target.textContent = 'copiado';
+  setTimeout(() => { e.target.textContent = 'copiar link final'; }, 1400);
 });
 </script>
 </body>
