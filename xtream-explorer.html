@@ -739,10 +739,11 @@ function loadProfiles(){
   });
   window._profiles = list;
 }
+const DEFAULT_PROXY_URL = 'https://cors-proxy.adoniasalmeida.workers.dev/?url=';
 function fillProfile(i){
   const p = window._profiles[i];
   $('fProto').value = p.proto; $('fHost').value = p.host; $('fPort').value = p.port;
-  $('fUser').value = p.user; $('fPass').value = p.pass; $('fProxy').value = p.customProxy || '';
+  $('fUser').value = p.user; $('fPass').value = p.pass; $('fProxy').value = p.customProxy || DEFAULT_PROXY_URL;
   $('profileList').classList.remove('show');
 }
 function removeProfile(i){
