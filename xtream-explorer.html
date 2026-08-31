@@ -767,7 +767,14 @@ async function connect(){
   loginProxyIdx = -1;
   const btn = $('btnConnect');
   btn.disabled = true; btn.textContent = 'Conectando…';
-  await attemptConnect(-1, btn);
+
+  // GitHub Pages é HTTPS. Navegadores bloqueiam fetch() direto para
+  // painéis Xtream HTTP (Mixed Content). Nesses casos, use o Worker
+  // configurado no campo "Proxy CORS" desde o primeiro pedido.
+  const pageIsHttps = location.protocol === 'https:';
+  const mustUseProxy = pageIsHttps && proto === 'http' && !!customProxy;
+
+  await attemptConnect(mustUseProxy ? 0 : -1, btn);
 }
 
 async function attemptConnect(proxyIdx, btn){
