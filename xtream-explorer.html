@@ -608,6 +608,13 @@ function proxyList(){
   if(conn && conn.customProxy) list.push({ name: 'seu proxy', wrap: u => conn.customProxy + encodeURIComponent(u) });
   return list;
 }
+// Página servida por HTTPS (ex: GitHub Pages) não pode fazer fetch direto a um painel http://
+// — o navegador bloqueia isso como "mixed content", antes mesmo de tentar a rede. Isso não
+// depende do CORS do painel: acontece mesmo se ele aceitasse a origem. Nesses casos o único
+// jeito é passar pelo proxy (o Worker roda no servidor, não no navegador, então não é afetado).
+function mixedContentBlocked(targetProto){
+  return location.protocol === 'https:' && targetProto === 'http:';
+}
 function isCorsLike(e){
   return e instanceof TypeError || (e.message && e.message.includes('Failed to fetch'));
 }
@@ -767,7 +774,12 @@ async function connect(){
   loginProxyIdx = -1;
   const btn = $('btnConnect');
   btn.disabled = true; btn.textContent = 'Conectando…';
-  await attemptConnect(-1, btn);
+  if(mixedContentBlocked(proto) && proxyList().length){
+    toast('Página é HTTPS e o painel é HTTP — indo direto pelo proxy.');
+    await attemptConnect(0, btn);
+  } else {
+    await attemptConnect(-1, btn);
+  }
 }
 
 async function attemptConnect(proxyIdx, btn){
@@ -794,6 +806,8 @@ async function attemptConnect(proxyIdx, btn){
     let msg;
     if(proxyIdx >= 0){
       msg = `Não foi possível conectar mesmo usando seu proxy (${list[proxyIdx] ? list[proxyIdx].name : 'personalizado'}). Verifique se o Worker está no ar e se a URL no campo "Proxy CORS" termina em "?url=". Tente novamente em instantes.`;
+    } else if(mixedContentBlocked(conn.proto) && !list.length){
+      msg = 'Esta página é HTTPS e o painel usa HTTP — o navegador bloqueia essa conexão direta por segurança (mixed content), independente do painel. Informe seu Worker no campo "Proxy CORS" (⚙ configurações avançadas) e tente novamente.';
     } else if(isCorsLike(e)){
       msg = list.length
         ? 'Bloqueio de CORS pelo painel na conexão direta. Tentando via seu proxy…'
@@ -1242,7 +1256,8 @@ function openPreview(it){
   // most panels also serve the same channel as an HLS manifest under .m3u8, so try that first.
   // VOD keeps its own container_extension (usually mp4/mkv), which native <video> can often play directly.
   const startExt = currentType === 'live' ? 'm3u8' : (it.container_extension || 'mp4');
-  loadPreview(startExt, -1);
+  const startProxyIdx = (mixedContentBlocked(conn.proto) && proxyList().length) ? 0 : -1;
+  loadPreview(startExt, startProxyIdx);
 }
 
 function loadPreview(ext, proxyIdx){
