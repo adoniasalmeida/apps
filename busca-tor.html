@@ -311,23 +311,28 @@ async function abrirTorrents(tmdbId, type, titulo) {
   try {
     const res = await fetch(`${url}/torbox/search?tmdb_id=${tmdbId}&type=${type === 'tv' ? 'tv' : 'movie'}&cached_only=false`);
     const data = await res.json();
-    const torrents = data.data || data.torrents || [];
+    const torrents = data.torrents || [];
     if (!torrents.length) {
       list.innerHTML = '<div class="status-msg">Nenhum torrent encontrado para este título ainda.</div>';
       return;
     }
+    torrents.sort((a, b) => (b.cached === true) - (a.cached === true));
     list.innerHTML = torrents.map((t, i) => {
       const nome = t.raw_title || t.title || t.name || 'sem título';
       const tamanho = t.size ? `${(t.size / 1e9).toFixed(2)} GB` : '';
-      const cached = t.cached === true || t.cached === 'true';
-      const hash = t.hash || t.info_hash || '';
+      const cached = t.cached === true;
+      const seeders = t.last_known_seeders != null ? `${t.last_known_seeders} seeds` : '';
+      const magnet = t.magnet || '';
+      window.__magnets = window.__magnets || {};
+      window.__magnets[i] = magnet;
       return `<div class="torrent-item">
         <div class="t-name">${nome}</div>
         <div class="t-meta">
           ${tamanho ? `<span class="badge">${tamanho}</span>` : ''}
+          ${seeders ? `<span class="badge">${seeders}</span>` : ''}
           <span class="badge ${cached ? 'cached' : 'notcached'}">${cached ? '✓ em cache' : 'sem cache'}</span>
         </div>
-        <button class="btn" onclick="adicionarTorrent('${hash}', this)">Adicionar e baixar</button>
+        <button class="btn" onclick="adicionarTorrent(window.__magnets[${i}], this)" ${magnet ? '' : 'disabled'}>Adicionar e baixar</button>
         <div class="dl-area" id="dl-${i}"></div>
       </div>`;
     }).join('');
@@ -336,13 +341,12 @@ async function abrirTorrents(tmdbId, type, titulo) {
   }
 }
 
-async function adicionarTorrent(hash, btnEl) {
+async function adicionarTorrent(magnet, btnEl) {
   const url = workerUrl();
-  if (!hash) { alert('Sem hash disponível para este item.'); return; }
+  if (!magnet) { alert('Sem magnet disponível para este item.'); return; }
   btnEl.disabled = true;
   btnEl.textContent = 'Adicionando...';
   try {
-    const magnet = `magnet:?xt=urn:btih:${hash}`;
     const res = await fetch(`${url}/torbox/add`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
