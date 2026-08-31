@@ -434,9 +434,9 @@ main{padding:0 26px 60px;min-width:0;}
           </select>
         </div>
         <div class="field">
-          <label>Proxy CORS personalizado</label>
-          <input id="fProxy" type="text" placeholder="https://seu-worker.workers.dev/?url=">
-          <div class="field-hint">Opcional. Se o painel bloquear o navegador (CORS), o app tenta sozinho: direto → este proxy (se preenchido) → 3 proxies públicos automáticos. Credenciais passam pelo proxy usado — não é necessário preencher isto.</div>
+          <label>Proxy CORS (seu Cloudflare Worker)</label>
+          <input id="fProxy" type="text" placeholder="https://seu-worker.workers.dev/?url=" value="https://cors-proxy.adoniasalmeida.workers.dev/?url=">
+          <div class="field-hint">Se o painel bloquear o navegador (CORS), o app tenta: direto → este proxy. Não há mais fallback para proxies públicos de terceiros — apenas o seu worker. Cole a URL do seu Worker aqui (ela fica salva no navegador junto com o login).</div>
         </div>
       </div>
     </div>
@@ -601,20 +601,12 @@ let useMediaProxy = false;
 let loginProxyIdx = -1;   // which proxy (if any) worked for the API/login calls
 let mediaProxyIdx = -1;   // which proxy (if any) is active for the preview player
 
-// Built-in public CORS proxies, tried automatically in order when the panel
-// blocks direct browser requests. No setup needed. Credentials do pass through
-// whichever third-party proxy ends up being used — same tradeoff as any public
-// CORS relay, worth knowing if the panel is sensitive.
-const DEFAULT_PROXIES = [
-  { name: 'corsproxy.io',  wrap: u => 'https://corsproxy.io/?url=' + encodeURIComponent(u) },
-  { name: 'allorigins',    wrap: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
-  { name: 'codetabs',      wrap: u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u) },
-];
-
+// Sem proxies públicos de terceiros. Apenas o Worker Cloudflare próprio do usuário
+// (campo "Proxy CORS"), tentado automaticamente quando o painel bloqueia o navegador.
 function proxyList(){
   const list = [];
-  if(conn && conn.customProxy) list.push({ name: 'proxy personalizado', wrap: u => conn.customProxy + encodeURIComponent(u) });
-  return list.concat(DEFAULT_PROXIES);
+  if(conn && conn.customProxy) list.push({ name: 'seu proxy', wrap: u => conn.customProxy + encodeURIComponent(u) });
+  return list;
 }
 function isCorsLike(e){
   return e instanceof TypeError || (e.message && e.message.includes('Failed to fetch'));
@@ -798,9 +790,16 @@ async function attemptConnect(proxyIdx, btn){
       return attemptConnect(proxyIdx + 1, btn);
     }
     btn.disabled = false; btn.textContent = 'Conectar e explorar';
-    let msg = proxyIdx >= 0
-      ? `Não foi possível conectar mesmo tentando ${list.length} proxies automáticos. Os proxies públicos podem estar temporariamente indisponíveis ou o painel exigir headers que eles não repassam. Tente novamente em instantes, ou informe seu próprio proxy no campo "Proxy CORS".`
-      : (isCorsLike(e) ? 'Bloqueio de CORS pelo painel.' : 'Não foi possível conectar. ' + e.message);
+    let msg;
+    if(proxyIdx >= 0){
+      msg = `Não foi possível conectar mesmo usando seu proxy (${list[proxyIdx] ? list[proxyIdx].name : 'personalizado'}). Verifique se o Worker está no ar e se a URL no campo "Proxy CORS" termina em "?url=". Tente novamente em instantes.`;
+    } else if(isCorsLike(e)){
+      msg = list.length
+        ? 'Bloqueio de CORS pelo painel na conexão direta. Tentando via seu proxy…'
+        : 'Bloqueio de CORS pelo painel e nenhum proxy configurado. Informe seu Worker no campo "Proxy CORS" (⚙ configurações avançadas) e tente novamente.';
+    } else {
+      msg = 'Não foi possível conectar. ' + e.message;
+    }
     showErr(msg);
   }
 }
@@ -1272,7 +1271,8 @@ function loadPreview(ext, proxyIdx){
       toast('Reprodução falhou — tentando proxy automático (' + list[mediaProxyIdx+1].name + ')…');
       loadPreview(ext, mediaProxyIdx + 1);
     } else {
-      setPreviewStatus(reason + ' Já tentei direto e com todos os proxies automáticos. Tente outra extensão (.ts/.m3u8), "Abrir em nova guia" ou "Baixar" e reproduzir num player externo como VLC.', true);
+      const extra = list.length ? '' : ' Nenhum proxy configurado — informe seu Worker no campo "Proxy CORS" para tentar via proxy.';
+      setPreviewStatus(reason + ' Já tentei direto' + (list.length ? ' e via seu proxy.' : '.') + extra + ' Tente outra extensão (.ts/.m3u8), "Abrir em nova guia" ou "Baixar" e reproduzir num player externo como VLC.', true);
     }
   };
 
@@ -1297,7 +1297,8 @@ function loadPreview(ext, proxyIdx){
 
 function toggleMediaProxy(){
   if(!useMediaProxy){
-    loadPreview(currentPreviewExt, 0); // jump straight to the first built-in proxy
+    if(!proxyList().length){ toast('Nenhum proxy configurado — preencha "Proxy CORS" nas configurações avançadas.'); return; }
+    loadPreview(currentPreviewExt, 0); // usa o proxy próprio
   } else {
     loadPreview(currentPreviewExt, -1); // back to direct
   }
