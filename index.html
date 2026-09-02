@@ -4,133 +4,160 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hub de Apps — Adonias</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c5cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230a0e17'/%3E%3Crect x='9' y='9' width='19' height='19' rx='6' fill='url(%23g)'/%3E%3Crect x='36' y='9' width='19' height='19' rx='6' fill='url(%23g)' opacity='0.55'/%3E%3Crect x='9' y='36' width='19' height='19' rx='6' fill='url(%23g)' opacity='0.55'/%3E%3Crect x='36' y='36' width='19' height='19' rx='6' fill='url(%23g)'/%3E%3C/svg%3E">
 <style>
-  :root{
-    --bg: #0a0e17;
-    --bg2: #0f1420;
-    --card: rgba(255,255,255,0.04);
-    --card-border: rgba(255,255,255,0.08);
-    --card-hover: rgba(255,255,255,0.07);
-    --text: #e8ecf3;
-    --muted: #8b93a7;
-    --accent: #7c5cff;
-    --accent2: #22d3ee;
-  }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{
-    min-height:100vh;
-    background:
-      radial-gradient(1000px 600px at 15% -10%, rgba(124,92,255,0.18), transparent 60%),
-      radial-gradient(900px 600px at 100% 10%, rgba(34,211,238,0.14), transparent 55%),
-      linear-gradient(180deg, var(--bg), var(--bg2));
-    color:var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
-    padding: 48px 20px 80px;
-  }
-  header{
-    max-width:1080px;
-    margin: 0 auto 44px;
-    text-align:center;
-  }
-  header h1{
-    font-size: clamp(28px, 4vw, 40px);
-    font-weight:700;
-    letter-spacing:-0.5px;
-    background: linear-gradient(90deg, #fff, #b9c2d8);
-    -webkit-background-clip:text;
-    background-clip:text;
-    color:transparent;
-  }
-  header p{
-    margin-top:10px;
-    color:var(--muted);
-    font-size:15px;
-  }
-  .grid{
-    max-width:1080px;
-    margin:0 auto;
-    display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap:20px;
-  }
-  a.card{
-    position:relative;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    padding:26px 22px;
-    background:var(--card);
-    border:1px solid var(--card-border);
-    border-radius:18px;
-    text-decoration:none;
-    color:var(--text);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    overflow:hidden;
-    transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
-  }
-  a.card::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background: linear-gradient(135deg, var(--icon-a, var(--accent)), var(--icon-b, var(--accent2)));
-    opacity:0;
-    transition: opacity .25s ease;
-    z-index:0;
-  }
-  a.card:hover{
-    transform: translateY(-4px);
-    background:var(--card-hover);
-    border-color: rgba(255,255,255,0.18);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-  }
-  a.card:hover::before{ opacity:0.06; }
-  .icon{
-    width:46px; height:46px;
-    border-radius:12px;
-    display:flex; align-items:center; justify-content:center;
-    font-size:22px;
-    background: linear-gradient(135deg, var(--icon-a, var(--accent)), var(--icon-b, var(--accent2)));
-    box-shadow: 0 6px 18px -4px rgba(0,0,0,0.5);
-    z-index:1;
-  }
-  .card-title{
-    font-size:18px;
-    font-weight:600;
-    z-index:1;
-  }
-  .card-desc{
-    font-size:13px;
-    color:var(--muted);
-    line-height:1.45;
-    z-index:1;
-  }
-  .card-tag{
-    margin-top:auto;
-    align-self:flex-start;
-    font-size:11px;
-    letter-spacing:0.4px;
-    text-transform:uppercase;
-    color:var(--muted);
-    padding:4px 10px;
-    border:1px solid var(--card-border);
-    border-radius:999px;
-    z-index:1;
-  }
-  footer{
-    max-width:1080px;
-    margin: 60px auto 0;
-    text-align:center;
-    color:var(--muted);
-    font-size:12px;
-  }
+:root{
+  --bg: #0a0e17;
+  --bg2: #0f1420;
+  --card: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --card-hover: rgba(255,255,255,0.07);
+  --text: #e8ecf3;
+  --muted: #8b93a7;
+  --accent: #7c5cff;
+  --accent2: #22d3ee;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(1000px 600px at 15% -10%, rgba(124,92,255,0.18), transparent 60%),
+    radial-gradient(900px 600px at 100% 10%, rgba(34,211,238,0.14), transparent 55%),
+    linear-gradient(180deg, var(--bg), var(--bg2));
+  color:var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  padding: 48px 20px 80px;
+}
+header{
+  max-width:1080px;
+  margin: 0 auto 44px;
+  text-align:center;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 14px;
+  border-radius:999px;
+  border:1px solid var(--card-border);
+  background:var(--card);
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:18px;
+}
+.badge span.dot{
+  width:6px; height:6px; border-radius:50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+header h1{
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight:700;
+  letter-spacing:-0.5px;
+  background: linear-gradient(90deg, #fff, #b9c2d8);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+header p{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:15px;
+  max-width:520px;
+  margin-left:auto;
+  margin-right:auto;
+}
+.grid{
+  max-width:1080px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap:20px;
+}
+a.card{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:26px 22px;
+  background:var(--card);
+  border:1px solid var(--card-border);
+  border-radius:18px;
+  text-decoration:none;
+  color:var(--text);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow:hidden;
+  transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+a.card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(135deg, var(--icon-a, var(--accent)), var(--icon-b, var(--accent2)));
+  opacity:0;
+  transition: opacity .25s ease;
+  z-index:0;
+}
+a.card:hover{
+  transform: translateY(-4px);
+  background:var(--card-hover);
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+}
+a.card:hover::before{ opacity:0.06; }
+a.card:focus-visible{
+  outline: 2px solid var(--accent2);
+  outline-offset: 3px;
+}
+.icon{
+  width:46px; height:46px;
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+  background: linear-gradient(135deg, var(--icon-a, var(--accent)), var(--icon-b, var(--accent2)));
+  box-shadow: 0 6px 18px -4px rgba(0,0,0,0.5);
+  z-index:1;
+}
+.card-title{
+  font-size:18px;
+  font-weight:600;
+  z-index:1;
+}
+.card-desc{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.5;
+  z-index:1;
+}
+.card-tag{
+  margin-top:auto;
+  align-self:flex-start;
+  font-size:11px;
+  letter-spacing:0.4px;
+  color:var(--muted);
+  padding:4px 10px;
+  border:1px solid var(--card-border);
+  border-radius:999px;
+  z-index:1;
+}
+footer{
+  max-width:1080px;
+  margin: 60px auto 0;
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+}
+@media (prefers-reduced-motion: reduce){
+  a.card, a.card::before{ transition:none; }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🚀 Hub de Apps</h1>
-  <p>Acesso rápido às ferramentas — clique em um card para abrir</p>
+  <div class="badge"><span class="dot"></span>6 ferramentas · atualizado hoje</div>
+  <h1>Hub de Apps</h1>
+  <p>Ferramentas pessoais para organizar streaming, mídia e arquivos — tudo rodando direto do navegador, sem backend.</p>
 </header>
 
 <div class="grid">
@@ -138,35 +165,42 @@
   <a class="card" href="streamvault.html" style="--icon-a:#7c5cff; --icon-b:#a78bfa;">
     <div class="icon">🗂️</div>
     <div class="card-title">StreamVault</div>
-    <div class="card-desc">Explorador universal de addons Stremio — descobre catálogos, resolve streams e exporta em lote (M3U/TXT/JSON).</div>
+    <div class="card-desc">Explora addons Stremio, descobre catálogos inteiros e exporta os links em lote — M3U, TXT ou JSON.</div>
     <div class="card-tag">Stremio · Export</div>
   </a>
 
   <a class="card" href="xtream-explorer.html" style="--icon-a:#ec4899; --icon-b:#f472b6;">
     <div class="icon">📡</div>
     <div class="card-title">Signal Explorer</div>
-    <div class="card-desc">Painel para contas Xtream Codes: navega Live, Filmes e Séries, testa o stream com player embutido antes de usar, busca e ordena o catálogo carregado, seleciona em massa e exporta por categoria, seleção ou conta inteira (M3U/JSON).</div>
+    <div class="card-desc">Painel para contas Xtream Codes: navega Live, Filmes e Séries, testa o stream num player embutido, busca, seleciona em massa e exporta por categoria ou conta inteira.</div>
     <div class="card-tag">Xtream · Live/VOD/Séries</div>
+  </a>
+
+  <a class="card" href="torrentbox.html" style="--icon-a:#ef4444; --icon-b:#fb923c;">
+    <div class="icon">🧲</div>
+    <div class="card-title">TorrentBox</div>
+    <div class="card-desc">Busca por filme ou série via TMDB e cruza com o cache do Torbox para achar o que normalmente não aparece — link pronto ou magnet, direto pra copiar ou baixar.</div>
+    <div class="card-tag">TMDB · Torrent</div>
   </a>
 
   <a class="card" href="m3ustudio.html" style="--icon-a:#f97316; --icon-b:#fbbf24;">
     <div class="icon">📺</div>
     <div class="card-title">M3U Studio</div>
-    <div class="card-desc">Editor de playlists M3U com grade de EPG e organização de canais por categoria.</div>
+    <div class="card-desc">Edita playlists M3U com grade de EPG e organiza os canais por categoria, sem sair do navegador.</div>
     <div class="card-tag">Playlist · EPG</div>
   </a>
 
   <a class="card" href="convertr.html" style="--icon-a:#22c55e; --icon-b:#4ade80;">
     <div class="icon">🎨</div>
     <div class="card-title">Convertr</div>
-    <div class="card-desc">Conversor de imagens em lote — PNG, SVG, WebP, JPEG — com watermark e presets.</div>
+    <div class="card-desc">Converte imagens em lote entre PNG, SVG, WebP e JPEG, com marca d'água e presets salvos.</div>
     <div class="card-tag">Imagens · Batch</div>
   </a>
 
   <a class="card" href="unproxy.html" style="--icon-a:#22d3ee; --icon-b:#67e8f9;">
     <div class="icon">🔓</div>
     <div class="card-title">Unproxy</div>
-    <div class="card-desc">Decodifica e resolve URLs de proxy — usado junto do FrostView / HLS proxy.</div>
+    <div class="card-desc">Decodifica e resolve URLs de proxy — útil pra destravar links de qualquer addon ou fonte de streaming.</div>
     <div class="card-tag">Proxy · HLS</div>
   </a>
 
