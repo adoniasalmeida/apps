@@ -94,6 +94,13 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
 .se-row input{width:50px;padding:7px;border-radius:var(--r-lg);border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:13px;text-align:center}
 .se-row button{padding:7px 14px;border-radius:var(--r-lg);border:none;background:var(--cyan);color:#031016;font-weight:800;font-size:12.5px;cursor:pointer}
 
+.filter-row{display:flex;gap:8px;padding:0 18px 12px;flex-wrap:wrap}
+.filter-row select{
+  flex:1;min-width:120px;padding:8px 10px;border-radius:var(--r-lg);
+  border:1px solid var(--line);background:var(--panel2);color:var(--text);
+  font-size:12px;font-family:inherit;
+}
+
 .stream-list{padding:0 18px 26px}
 .qgroup-head{display:flex;align-items:center;gap:8px;padding:10px 0 6px;font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .qtag{font-size:10px;padding:2px 7px;border-radius:var(--r-sm);font-weight:900}
@@ -110,6 +117,7 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
 .mp.flags{background:none;border:none;padding:0;font-size:12px}
 .mp.cached{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green);border-color:color-mix(in srgb,var(--green) 25%,transparent)}
 .mp.peers{background:color-mix(in srgb,var(--yellow) 14%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 25%,transparent)}
+.mp.src{background:color-mix(in srgb,var(--purple) 14%,transparent);color:#a78bfa;border-color:color-mix(in srgb,var(--purple) 25%,transparent)}
 .stream-name{font-size:11.5px;color:var(--text);line-height:1.35;word-break:break-word}
 
 .icon-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;position:relative}
@@ -143,7 +151,7 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
 
 <header>
   <div class="container nav">
-    <a class="brand" href="#"><div class="brand-mark">🧲</div> TorrentBox</a>
+    <a class="brand" href="#"><div class="brand-mark">⚡</div> TorrentBox</a>
     <button class="gear-btn" onclick="abrirConfig()">⚙</button>
   </div>
 </header>
@@ -191,6 +199,10 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
       <label>Ep.</label><input id="episodeInput" type="number" min="1" value="1" />
       <button onclick="buscarStreams()">Buscar</button>
     </div>
+    <div class="filter-row" id="filterRow" style="display:none;">
+      <select id="filtroIdioma" onchange="renderStreamList()"></select>
+      <select id="filtroQualidade" onchange="renderStreamList()"></select>
+    </div>
     <div class="stream-list" id="streamList"></div>
   </div>
 </div>
@@ -213,7 +225,7 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
 
 <script>
 const TMDB_BASE = 'https://api.themoviedb.org/3';
-const MAGNETO_BASE = 'https://magneto-jnv5.onrender.com/v1';
+const AIOSTREAMS_BASE = 'https://aiostreams.elfhosted.com/stremio/c9422674-8013-47ba-bc0b-e3d7b5bf6f7e/eyJpIjoiS2pubmR3MEdaUTNOeklySWdBdzlIQT09IiwiZSI6IkxKR1EwMUtXZmhQcHpITWh5NnJ5SFE9PSIsInQiOiJhIn0';
 const ICON_COPY = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 const ICON_DOWNLOAD = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
@@ -285,6 +297,18 @@ function buscaRapida(termo){
   buscarResultados(termo);
 }
 
+function normalizar(s){
+  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+function relevancia(titulo, query){
+  const t = normalizar(titulo), q = normalizar(query);
+  if (t === q) return 4;
+  if (t.startsWith(q)) return 3;
+  if (t.includes(` ${q}`) || t.includes(`${q} `)) return 2;
+  if (t.includes(q)) return 1;
+  return 0;
+}
+
 async function buscarResultados(query){
   const key = tmdbKey();
   chipsEl.style.display = 'none';
@@ -294,8 +318,12 @@ async function buscarResultados(query){
   try{
     const res = await fetch(`${TMDB_BASE}/search/multi?api_key=${key}&language=pt-BR&query=${encodeURIComponent(query)}`);
     const data = await res.json();
-    const items = (data.results || []).filter(r => r.media_type==='movie' || r.media_type==='tv');
+    let items = (data.results || []).filter(r => r.media_type==='movie' || r.media_type==='tv');
     if (!items.length){ resultListEl.innerHTML = '<div class="status-msg">Nada encontrado.</div>'; return; }
+    items = items
+      .map(item => ({ item, score: relevancia(item.title || item.name, query) }))
+      .sort((a, b) => b.score - a.score || (b.item.popularity||0) - (a.item.popularity||0))
+      .map(x => x.item);
     resultListEl.innerHTML = items.map(item => {
       const titulo = item.title || item.name;
       const ano = (item.release_date || item.first_air_date || '').slice(0,4);
@@ -362,13 +390,22 @@ async function abrirDetalhe(tmdbId, tmdbType){
   }
 }
 
-function parseMeta(title){
-  const linha = (title.split('\n')[1] || '');
-  const flags = linha.match(/[\u{1F1E6}-\u{1F1FF}]{2}/gu) || [];
-  const size = (linha.match(/💾\s*([\d.,]+\s*[GM]B)/) || [])[1] || null;
-  const peers = (linha.match(/👤\s*(\d+)/) || [])[1] || null;
-  const cached = /⚡/.test(linha);
-  return { flags, size, peers, cached };
+function parseAioStream(s){
+  const name = s.name || '';
+  const desc = s.description || '';
+  const cached = name.includes('⚡');
+  const provider = (name.replace(/\[.*?\]/, '').replace(/\d{3,4}p/i, '').trim()) || null;
+  const sizeBytes = (s.behaviorHints && (s.behaviorHints.videoSize || s.behaviorHints.folderSize)) || null;
+  const sizeGB = sizeBytes ? (sizeBytes/1e9).toFixed(sizeBytes/1e9 >= 100 ? 0 : 1) + ' GB' : null;
+  const fonte = (desc.match(/🎥\s*([^\n🎞🏷]+)/) || [])[1]?.trim() || null;
+  const codec = (desc.match(/🎞[^\s]*\s*([^\n🏷]+)/) || [])[1]?.trim() || null;
+  const grupo = (desc.match(/🏷[^\s]*\s*([^\n]+)/) || [])[1]?.trim() || null;
+  const hdr = (desc.match(/📺\s*([^\n🎧🔊]+)/) || [])[1]?.trim() || null;
+  const audio = (desc.match(/🎧\s*([^\n🔊]+)/) || [])[1]?.trim() || null;
+  const canais = (desc.match(/🔊\s*([^\n]+)/) || [])[1]?.trim() || null;
+  const idioma = (desc.match(/🌎\s*([^\n]+)/) || [])[1]?.trim() || null;
+  const filename = (s.behaviorHints && s.behaviorHints.filename) || (desc.match(/📁\s*([^\n]+)/) || [])[1] || name;
+  return { provider, cached, sizeGB, fonte, codec, grupo, hdr, audio, canais, idioma, filename };
 }
 function parseQuality(nome){
   if (/2160p|4k/i.test(nome)) return '4K';
@@ -380,16 +417,16 @@ function parseQuality(nome){
 function qClass(q){ return { '4K':'q4k','1080p':'q1080','720p':'q720','SD':'qsd','Outros':'qsd' }[q] || 'qsd'; }
 
 async function buscarStreams(){
-  const tbKey = torboxKey();
   const list = document.getElementById('streamList');
-  if (!tbKey){ list.innerHTML = '<div class="status-msg">Abra as configurações (⚙) e preencha sua chave Torbox.</div>'; return; }
+  const filterRow = document.getElementById('filterRow');
   if (!currentImdb) return;
+  filterRow.style.display = 'none';
   list.innerHTML = '<div class="status-msg">Buscando torrents...</div>';
   const idPart = currentType === 'series'
     ? `${currentImdb}:${document.getElementById('seasonInput').value||1}:${document.getElementById('episodeInput').value||1}`
     : currentImdb;
 
-  const url = `${MAGNETO_BASE}/debrid=torbox,${encodeURIComponent(tbKey)}%7Clang=pt-BR/stream/${currentType}/${idPart}.json`;
+  const url = `${AIOSTREAMS_BASE}/stream/${currentType}/${idPart}.json`;
 
   async function buscarFonte(tentativa){
     try{
@@ -414,47 +451,112 @@ async function buscarStreams(){
     const streams = resposta.streams;
 
     if (!streams.length){ list.innerHTML = `<div class="status-msg">Nenhum torrent encontrado para este título/episódio.${resposta.erro ? `\n\n${resposta.erro}` : ''}</div>`; return; }
-    window.__streams = streams;
 
-    const grupos = {};
-    streams.forEach((s, i) => { const q = parseQuality(s.name || ''); (grupos[q] = grupos[q] || []).push(i); });
-    const ordem = ['4K','1080p','720p','SD','Outros'];
+    window.__streamsMeta = streams.map(s => ({
+      s, meta: parseAioStream(s), quality: parseQuality(s.name || '')
+    }));
 
-    list.innerHTML = ordem.filter(q => grupos[q]).map(q => {
-      const linhas = grupos[q].map(i => {
-        const s = streams[i];
-        const pronto = !!s.url;
-        const nome = (s.title || s.name || '').split('\n')[0].replace(/</g,'&lt;');
-        const meta = parseMeta(s.title || '');
-        let magnetLink = '';
-        if (s.infoHash){
-          const trackers = (s.sources||[]).filter(t=>t.startsWith('tracker:')).map(t=>`&tr=${encodeURIComponent(t.replace('tracker:',''))}`).join('');
-          magnetLink = `magnet:?xt=urn:btih:${s.infoHash}${trackers}`;
-        }
-        const dlHref = pronto ? s.url : magnetLink;
-        const copyTexto = pronto ? (s.url || '') : magnetLink;
-        return `<div class="stream-row">
-          <div class="stream-main">
-            <div class="meta-pills">
-              ${meta.flags.length ? `<span class="mp flags">${meta.flags.join('')}</span>` : ''}
-              ${meta.size ? `<span class="mp">${meta.size}</span>` : ''}
-              ${meta.cached ? `<span class="mp cached">⚡ cache</span>` : ''}
-              ${meta.peers ? `<span class="mp peers">👤 ${meta.peers}</span>` : ''}
-            </div>
-            <div class="stream-name">${nome}</div>
+    montarFiltros();
+    renderStreamList();
+  }catch(e){ list.innerHTML = `<div class="status-msg">Erro: ${e}</div>`; }
+}
+
+function idiomaTokens(idioma){
+  if (!idioma) return [];
+  return idioma.split(/[,/|]+|\se\s/)
+    .map(s => s
+      .replace(/\([^)]*\)/g, '')
+      .replace(/\b(brasileiro|brasil|br|latino|latam)\b/gi, '')
+      .replace(/-\s*(br|pt|us|uk)\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+    )
+    .filter(Boolean);
+}
+
+function montarFiltros(){
+  const dados = window.__streamsMeta || [];
+  const idiomaSel = document.getElementById('filtroIdioma');
+  const qualSel = document.getElementById('filtroQualidade');
+  const idiomaAtual = idiomaSel.value;
+  const qualAtual = qualSel.value;
+
+  const todosTokens = dados.flatMap(d => idiomaTokens(d.meta.idioma));
+  const idiomaMap = new Map();
+  todosTokens.forEach(t => { const k = t.toLowerCase(); if (!idiomaMap.has(k)) idiomaMap.set(k, t); });
+  const idiomas = [...idiomaMap.values()].sort();
+  const temSemIdioma = dados.some(d => !d.meta.idioma);
+  idiomaSel.innerHTML = '<option value="">Idioma: todos</option>' +
+    idiomas.map(i => `<option value="${i}">${i}</option>`).join('') +
+    (temSemIdioma ? '<option value="__none__">Sem idioma informado</option>' : '');
+
+  const ordem = ['4K','1080p','720p','SD','Outros'];
+  const quals = ordem.filter(q => dados.some(d => d.quality === q));
+  qualSel.innerHTML = '<option value="">Qualidade: todas</option>' +
+    quals.map(q => `<option value="${q}">${q}</option>`).join('');
+
+  if ([...idiomaSel.options].some(o => o.value === idiomaAtual)) idiomaSel.value = idiomaAtual;
+  if ([...qualSel.options].some(o => o.value === qualAtual)) qualSel.value = qualAtual;
+
+  document.getElementById('filterRow').style.display = (idiomas.length || quals.length > 1) ? 'flex' : 'none';
+}
+
+function renderStreamList(){
+  const list = document.getElementById('streamList');
+  const dados = window.__streamsMeta || [];
+  const filtroIdioma = document.getElementById('filtroIdioma').value;
+  const filtroQualidade = document.getElementById('filtroQualidade').value;
+
+  const filtrados = dados.filter(d => {
+    if (filtroQualidade && d.quality !== filtroQualidade) return false;
+    if (filtroIdioma === '__none__' && d.meta.idioma) return false;
+    if (filtroIdioma && filtroIdioma !== '__none__' && !idiomaTokens(d.meta.idioma).some(t => t.toLowerCase() === filtroIdioma.toLowerCase())) return false;
+    return true;
+  });
+
+  if (!filtrados.length){ list.innerHTML = '<div class="status-msg">Nenhum resultado com esse filtro.</div>'; return; }
+
+  const grupos = {};
+  filtrados.forEach(d => { (grupos[d.quality] = grupos[d.quality] || []).push(d); });
+  const ordem = ['4K','1080p','720p','SD','Outros'];
+
+  list.innerHTML = ordem.filter(q => grupos[q]).map(q => {
+    const linhas = grupos[q].map(({s, meta}) => {
+      const pronto = !!s.url;
+      const nome = (meta.filename || '').replace(/</g,'&lt;');
+      let magnetLink = '';
+      if (s.infoHash){
+        const trackers = (s.sources||[]).filter(t=>t.startsWith('tracker:')).map(t=>`&tr=${encodeURIComponent(t.replace('tracker:',''))}`).join('');
+        magnetLink = `magnet:?xt=urn:btih:${s.infoHash}${trackers}`;
+      }
+      const dlHref = pronto ? s.url : magnetLink;
+      const copyTexto = pronto ? (s.url || '') : magnetLink;
+      return `<div class="stream-row">
+        <div class="stream-main">
+          <div class="meta-pills">
+            ${meta.provider ? `<span class="mp src">${meta.provider}</span>` : ''}
+            ${meta.cached ? `<span class="mp cached">⚡ cache</span>` : ''}
+            ${meta.sizeGB ? `<span class="mp">${meta.sizeGB}</span>` : ''}
+            ${meta.idioma ? `<span class="mp peers">🌎 ${meta.idioma}</span>` : ''}
+            ${meta.fonte ? `<span class="mp">${meta.fonte}</span>` : ''}
+            ${meta.codec ? `<span class="mp">${meta.codec}</span>` : ''}
+            ${meta.hdr ? `<span class="mp">${meta.hdr}</span>` : ''}
+            ${(meta.audio || meta.canais) ? `<span class="mp">${[meta.audio, meta.canais].filter(Boolean).join(' ')}</span>` : ''}
+            ${meta.grupo ? `<span class="mp">${meta.grupo}</span>` : ''}
           </div>
-          <div class="icon-actions">
-            ${copyTexto ? `<button class="icon-btn" onclick="copiarTexto('${copyTexto.replace(/'/g,"\\'")}', '${pronto ? 'link' : 'magnet'}')" title="Copiar">${ICON_COPY}</button>` : ''}
-            ${dlHref ? `<a class="icon-btn dl" href="${dlHref}" target="_blank" rel="noopener" title="Baixar">${ICON_DOWNLOAD}</a>` : ''}
-          </div>
-        </div>`;
-      }).join('');
-      return `<div>
-        <div class="qgroup-head"><span class="qtag ${qClass(q)}">${q}</span> ${grupos[q].length} opç${grupos[q].length===1?'ão':'ões'}</div>
-        ${linhas}
+          <div class="stream-name">${nome}</div>
+        </div>
+        <div class="icon-actions">
+          ${copyTexto ? `<button class="icon-btn" onclick="copiarTexto('${copyTexto.replace(/'/g,"\\'")}', '${pronto ? 'link' : 'magnet'}')" title="Copiar">${ICON_COPY}</button>` : ''}
+          ${dlHref ? `<a class="icon-btn dl" href="${dlHref}" target="_blank" rel="noopener" title="Baixar">${ICON_DOWNLOAD}</a>` : ''}
+        </div>
       </div>`;
     }).join('');
-  }catch(e){ list.innerHTML = `<div class="status-msg">Erro: ${e}</div>`; }
+    return `<div>
+      <div class="qgroup-head"><span class="qtag ${qClass(q)}">${q}</span> ${grupos[q].length} opç${grupos[q].length===1?'ão':'ões'}</div>
+      ${linhas}
+    </div>`;
+  }).join('');
 }
 
 function copiarTexto(texto, tipo){
