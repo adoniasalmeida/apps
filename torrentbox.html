@@ -213,7 +213,7 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
     <h2>Suas chaves de API</h2>
     <p class="sub">Ficam salvas só neste navegador (localStorage). Nunca são enviadas a mim ou a terceiros.</p>
     <div class="field"><label>TMDB API Key</label><input id="tmdbKey" placeholder="Chave da API TMDB (v3)" /></div>
-    <div class="field"><label>Torbox API Key</label><input id="torboxKey" placeholder="Chave da API Torbox" /></div>
+    <div class="field"><label>Link do AIOStreams (manifest)</label><input id="aioUrl" placeholder="https://aiostreams.elfhosted.com/stremio/.../manifest.json" /></div>
     <div class="modal-actions">
       <button class="cancel" onclick="fecharConfig()">Fechar</button>
       <button class="save" onclick="salvarConfig()">Salvar</button>
@@ -225,7 +225,6 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
 
 <script>
 const TMDB_BASE = 'https://api.themoviedb.org/3';
-const AIOSTREAMS_BASE = 'https://aiostreams.elfhosted.com/stremio/c9422674-8013-47ba-bc0b-e3d7b5bf6f7e/eyJpIjoiS2pubmR3MEdaUTNOeklySWdBdzlIQT09IiwiZSI6IkxKR1EwMUtXZmhQcHpITWh5NnJ5SFE9PSIsInQiOiJhIn0';
 const ICON_COPY = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 const ICON_DOWNLOAD = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
@@ -253,17 +252,20 @@ let currentImdb = null, currentType = null;
 let debounceTimer = null;
 
 function tmdbKey(){ return localStorage.getItem('tmdb_key') || ''; }
-function torboxKey(){ return localStorage.getItem('torbox_key') || ''; }
+function aioUrl(){
+  let v = (localStorage.getItem('aiostreams_url') || '').trim().replace(/\/$/, '');
+  return v.replace(/\/manifest\.json$/, '');
+}
 
 function abrirConfig(){
   document.getElementById('tmdbKey').value = tmdbKey();
-  document.getElementById('torboxKey').value = torboxKey();
+  document.getElementById('aioUrl').value = localStorage.getItem('aiostreams_url') || '';
   document.getElementById('configBackdrop').classList.add('open');
 }
 function fecharConfig(){ document.getElementById('configBackdrop').classList.remove('open'); }
 function salvarConfig(){
   localStorage.setItem('tmdb_key', document.getElementById('tmdbKey').value.trim());
-  localStorage.setItem('torbox_key', document.getElementById('torboxKey').value.trim());
+  localStorage.setItem('aiostreams_url', document.getElementById('aioUrl').value.trim());
   fecharConfig();
 }
 
@@ -420,13 +422,15 @@ async function buscarStreams(){
   const list = document.getElementById('streamList');
   const filterRow = document.getElementById('filterRow');
   if (!currentImdb) return;
+  const base = aioUrl();
+  if (!base){ list.innerHTML = '<div class="status-msg">Abra as configurações (⚙) e cole o link do manifest do AIOStreams.</div>'; return; }
   filterRow.style.display = 'none';
   list.innerHTML = '<div class="status-msg">Buscando torrents...</div>';
   const idPart = currentType === 'series'
     ? `${currentImdb}:${document.getElementById('seasonInput').value||1}:${document.getElementById('episodeInput').value||1}`
     : currentImdb;
 
-  const url = `${AIOSTREAMS_BASE}/stream/${currentType}/${idPart}.json`;
+  const url = `${base}/stream/${currentType}/${idPart}.json`;
 
   async function buscarFonte(tentativa){
     try{
