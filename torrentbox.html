@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0a0a0f">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23g)'/%3E%3Ctext x='50' y='69' font-size='56' text-anchor='middle' fill='%230a0a0f'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
 <title>TorrentBox — Buscador de torrents</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,6 +101,12 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
   border:1px solid var(--line);background:var(--panel2);color:var(--text);
   font-size:12px;font-family:inherit;
 }
+.icon-toggle{
+  width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r-lg);border:1px solid var(--line);background:var(--panel2);
+  color:var(--muted);font-size:15px;cursor:pointer;
+}
+.icon-toggle.active{background:color-mix(in srgb,var(--green) 16%,var(--panel2));color:var(--green);border-color:color-mix(in srgb,var(--green) 30%,transparent)}
 
 .stream-list{padding:0 18px 26px}
 .qgroup-head{display:flex;align-items:center;gap:8px;padding:10px 0 6px;font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
@@ -118,6 +125,7 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
 .mp.cached{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green);border-color:color-mix(in srgb,var(--green) 25%,transparent)}
 .mp.peers{background:color-mix(in srgb,var(--yellow) 14%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 25%,transparent)}
 .mp.src{background:color-mix(in srgb,var(--purple) 14%,transparent);color:#a78bfa;border-color:color-mix(in srgb,var(--purple) 25%,transparent)}
+.mp.seeds{background:color-mix(in srgb,var(--yellow) 14%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 25%,transparent)}
 .stream-name{font-size:11.5px;color:var(--text);line-height:1.35;word-break:break-word}
 
 .icon-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;position:relative}
@@ -202,6 +210,7 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
     <div class="filter-row" id="filterRow" style="display:none;">
       <select id="filtroIdioma" onchange="renderStreamList()"></select>
       <select id="filtroQualidade" onchange="renderStreamList()"></select>
+      <button class="icon-toggle" id="filtroCacheBtn" onclick="toggleCache()" title="Só em cache">⚡</button>
     </div>
     <div class="stream-list" id="streamList"></div>
   </div>
@@ -230,9 +239,14 @@ const ICON_DOWNLOAD = '<svg width="15" height="15" viewBox="0 0 24 24" fill="non
 
 const SUGESTOES_POOL = [
   'Matrix', 'Breaking Bad', 'Interestelar', 'The Boys', 'Duna',
-  'Round 6', 'Vingadores', 'Round 6', 'Cidade de Deus', 'Chernobyl',
-  'O Poderoso Chefão', 'Peaky Blinders', 'Coringa', 'Stranger Things',
-  'A Origem', 'Tropa de Elite', 'Round 6', 'Better Call Saul', 'Oppenheimer'
+  'Round 6', 'Vingadores', 'Cidade de Deus', 'Chernobyl', 'O Poderoso Chefão',
+  'Peaky Blinders', 'Coringa', 'Stranger Things', 'A Origem', 'Tropa de Elite',
+  'Better Call Saul', 'Oppenheimer', 'O Senhor dos Anéis', 'Pulp Fiction',
+  'Parasita', 'True Detective', 'Clube da Luta', 'Game of Thrones',
+  'Homem-Aranha', 'La Casa de Papel', 'Se7en', 'O Exorcista', 'Blade Runner',
+  'Sucessão', 'Dark', 'John Wick', 'Vingança em Dobro', 'Missão Impossível',
+  'A Forma da Água', 'Ford v Ferrari', 'Coco', 'Divertida Mente',
+  'O Rei Leão', 'Toy Story', 'Kingsman', 'Homem de Ferro'
 ];
 function sortearSugestoes(){
   const pool = [...new Set(SUGESTOES_POOL)];
@@ -250,6 +264,13 @@ function sortearSugestoes(){
 
 let currentImdb = null, currentType = null;
 let debounceTimer = null;
+let somenteCache = false;
+
+function toggleCache(){
+  somenteCache = !somenteCache;
+  document.getElementById('filtroCacheBtn').classList.toggle('active', somenteCache);
+  renderStreamList();
+}
 
 function tmdbKey(){ return localStorage.getItem('tmdb_key') || ''; }
 function aioUrl(){
@@ -406,8 +427,11 @@ function parseAioStream(s){
   const audio = (desc.match(/🎧\s*([^\n🔊]+)/) || [])[1]?.trim() || null;
   const canais = (desc.match(/🔊\s*([^\n]+)/) || [])[1]?.trim() || null;
   const idioma = (desc.match(/🌎\s*([^\n]+)/) || [])[1]?.trim() || null;
+  const encontradoVia = (desc.match(/🔍\s*([^\n]+)/) || [])[1]?.trim() || null;
+  const seeders = (desc.match(/👥\s*(\d+)/) || [])[1] || null;
+  const pendente = name.includes('⏳');
   const filename = (s.behaviorHints && s.behaviorHints.filename) || (desc.match(/📁\s*([^\n]+)/) || [])[1] || name;
-  return { provider, cached, sizeGB, fonte, codec, grupo, hdr, audio, canais, idioma, filename };
+  return { provider, cached, sizeGB, fonte, codec, grupo, hdr, audio, canais, idioma, encontradoVia, seeders, pendente, filename };
 }
 function parseQuality(nome){
   if (/2160p|4k/i.test(nome)) return '4K';
@@ -425,6 +449,8 @@ async function buscarStreams(){
   const base = aioUrl();
   if (!base){ list.innerHTML = '<div class="status-msg">Abra as configurações (⚙) e cole o link do manifest do AIOStreams.</div>'; return; }
   filterRow.style.display = 'none';
+  somenteCache = false;
+  document.getElementById('filtroCacheBtn').classList.remove('active');
   list.innerHTML = '<div class="status-msg">Buscando torrents...</div>';
   const idPart = currentType === 'series'
     ? `${currentImdb}:${document.getElementById('seasonInput').value||1}:${document.getElementById('episodeInput').value||1}`
@@ -465,17 +491,56 @@ async function buscarStreams(){
   }catch(e){ list.innerHTML = `<div class="status-msg">Erro: ${e}</div>`; }
 }
 
+const IDIOMA_PT = {
+  'english': 'Inglês', 'portuguese': 'Português', 'spanish': 'Espanhol',
+  'french': 'Francês', 'german': 'Alemão', 'italian': 'Italiano',
+  'russian': 'Russo', 'arabic': 'Árabe', 'chinese': 'Chinês',
+  'japanese': 'Japonês', 'korean': 'Coreano', 'hindi': 'Hindi',
+  'bengali': 'Bengali', 'bulgarian': 'Búlgaro', 'croatian': 'Croata',
+  'czech': 'Tcheco', 'danish': 'Dinamarquês', 'dutch': 'Holandês',
+  'finnish': 'Finlandês', 'greek': 'Grego', 'hebrew': 'Hebraico',
+  'hungarian': 'Húngaro', 'indonesian': 'Indonésio', 'malay': 'Malaio',
+  'norwegian': 'Norueguês', 'polish': 'Polonês', 'romanian': 'Romeno',
+  'serbian': 'Sérvio', 'slovak': 'Eslovaco', 'swedish': 'Sueco',
+  'thai': 'Tailandês', 'turkish': 'Turco', 'ukrainian': 'Ucraniano',
+  'vietnamese': 'Vietnamita', 'persian': 'Persa', 'tamil': 'Tâmil',
+  'telugu': 'Telugu', 'multi': 'Multi', 'multi audio': 'Multi',
+  'dual audio': 'Áudio duplo', 'dubbed': 'Dublado', 'latino': 'Latino',
+  'latvian': 'Letão', 'lithuanian': 'Lituano', 'slovenian': 'Esloveno',
+  'estonian': 'Estoniano', 'icelandic': 'Islandês', 'maltese': 'Maltês',
+  'albanian': 'Albanês', 'macedonian': 'Macedônio', 'bosnian': 'Bósnio',
+  'georgian': 'Georgiano', 'armenian': 'Armênio', 'azerbaijani': 'Azerbaijano',
+  'kazakh': 'Cazaque', 'mongolian': 'Mongol', 'filipino': 'Filipino',
+  'tagalog': 'Tagalo', 'swahili': 'Suaíli', 'afrikaans': 'Africâner',
+  'amharic': 'Amárico', 'urdu': 'Urdu', 'punjabi': 'Panjabi',
+  'gujarati': 'Guzerate', 'marathi': 'Marata', 'kannada': 'Canarês',
+  'malayalam': 'Malaiala', 'sinhala': 'Cingalês', 'burmese': 'Birmanês',
+  'khmer': 'Khmer', 'lao': 'Laociano', 'nepali': 'Nepalês',
+};
+function traduzirIdioma(nome){
+  const chave = nome.toLowerCase().trim();
+  return IDIOMA_PT[chave] || nome;
+}
 function idiomaTokens(idioma){
   if (!idioma) return [];
   return idioma.split(/[,/|]+|\se\s/)
     .map(s => s
+      .split('📝')[0]
       .replace(/\([^)]*\)/g, '')
-      .replace(/\b(brasileiro|brasil|br|latino|latam)\b/gi, '')
+      .replace(/\b(brasileiro|brasil|br|latam)\b/gi, '')
       .replace(/-\s*(br|pt|us|uk)\b/gi, '')
       .replace(/\s+/g, ' ')
       .trim()
     )
-    .filter(Boolean);
+    .filter(Boolean)
+    .map(traduzirIdioma);
+}
+function idiomaDisplay(idioma){
+  const tokens = idiomaTokens(idioma);
+  if (!tokens.length) return null;
+  const map = new Map();
+  tokens.forEach(t => { const k = t.toLowerCase(); if (!map.has(k)) map.set(k, t); });
+  return [...map.values()].sort().join(' · ');
 }
 
 function montarFiltros(){
@@ -502,7 +567,7 @@ function montarFiltros(){
   if ([...idiomaSel.options].some(o => o.value === idiomaAtual)) idiomaSel.value = idiomaAtual;
   if ([...qualSel.options].some(o => o.value === qualAtual)) qualSel.value = qualAtual;
 
-  document.getElementById('filterRow').style.display = (idiomas.length || quals.length > 1) ? 'flex' : 'none';
+  document.getElementById('filterRow').style.display = dados.length ? 'flex' : 'none';
 }
 
 function renderStreamList(){
@@ -512,6 +577,7 @@ function renderStreamList(){
   const filtroQualidade = document.getElementById('filtroQualidade').value;
 
   const filtrados = dados.filter(d => {
+    if (somenteCache && !d.meta.cached) return false;
     if (filtroQualidade && d.quality !== filtroQualidade) return false;
     if (filtroIdioma === '__none__' && d.meta.idioma) return false;
     if (filtroIdioma && filtroIdioma !== '__none__' && !idiomaTokens(d.meta.idioma).some(t => t.toLowerCase() === filtroIdioma.toLowerCase())) return false;
@@ -540,8 +606,10 @@ function renderStreamList(){
           <div class="meta-pills">
             ${meta.provider ? `<span class="mp src">${meta.provider}</span>` : ''}
             ${meta.cached ? `<span class="mp cached">⚡ cache</span>` : ''}
+            ${meta.encontradoVia ? `<span class="mp">🔍 ${meta.encontradoVia}</span>` : ''}
+            ${meta.seeders ? `<span class="mp seeds">👥 ${meta.seeders}</span>` : ''}
             ${meta.sizeGB ? `<span class="mp">${meta.sizeGB}</span>` : ''}
-            ${meta.idioma ? `<span class="mp peers">🌎 ${meta.idioma}</span>` : ''}
+            ${idiomaDisplay(meta.idioma) ? `<span class="mp peers">🌎 ${idiomaDisplay(meta.idioma)}</span>` : ''}
             ${meta.fonte ? `<span class="mp">${meta.fonte}</span>` : ''}
             ${meta.codec ? `<span class="mp">${meta.codec}</span>` : ''}
             ${meta.hdr ? `<span class="mp">${meta.hdr}</span>` : ''}
