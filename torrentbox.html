@@ -426,7 +426,7 @@ function parseAioStream(s){
   const hdr = (desc.match(/📺\s*([^\n🎧🔊]+)/) || [])[1]?.trim() || null;
   const audio = (desc.match(/🎧\s*([^\n🔊]+)/) || [])[1]?.trim() || null;
   const canais = (desc.match(/🔊\s*([^\n]+)/) || [])[1]?.trim() || null;
-  const idioma = (desc.match(/🌎\s*([^\n]+)/) || [])[1]?.trim() || null;
+  const idioma = (desc.match(/🌎\s*([^📝\n]+)/) || [])[1]?.trim() || null;
   const encontradoVia = (desc.match(/🔍\s*([^\n]+)/) || [])[1]?.trim() || null;
   const seeders = (desc.match(/👥\s*(\d+)/) || [])[1] || null;
   const pendente = name.includes('⏳');
