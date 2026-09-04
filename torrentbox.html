@@ -96,11 +96,23 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
 .se-row button{padding:7px 14px;border-radius:var(--r-lg);border:none;background:var(--cyan);color:#031016;font-weight:800;font-size:12.5px;cursor:pointer}
 
 .filter-row{display:flex;gap:8px;padding:0 18px 12px;flex-wrap:wrap}
-.filter-row select{
-  flex:1;min-width:120px;padding:8px 10px;border-radius:var(--r-lg);
+.ms-filter{position:relative;flex:1;min-width:120px}
+.ms-btn{
+  width:100%;padding:8px 10px;border-radius:var(--r-lg);
   border:1px solid var(--line);background:var(--panel2);color:var(--text);
-  font-size:12px;font-family:inherit;
+  font-size:12px;font-family:inherit;text-align:left;cursor:pointer;
 }
+.ms-btn.active{border-color:color-mix(in srgb,var(--cyan) 40%,transparent);color:var(--cyan-hover)}
+.ms-panel{
+  display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);
+  max-height:260px;overflow-y:auto;z-index:15;box-shadow:0 16px 40px rgba(0,0,0,.4);
+}
+.ms-panel.open{display:block}
+.ms-option{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--line)}
+.ms-option:last-child{border-bottom:none}
+.ms-option:hover{background:var(--panel2)}
+.ms-option input{accent-color:var(--cyan)}
 .icon-toggle{
   width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
   border-radius:var(--r-lg);border:1px solid var(--line);background:var(--panel2);
@@ -208,8 +220,14 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:#657181;font-size:1
       <button onclick="buscarStreams()">Buscar</button>
     </div>
     <div class="filter-row" id="filterRow" style="display:none;">
-      <select id="filtroIdioma" onchange="renderStreamList()"></select>
-      <select id="filtroQualidade" onchange="renderStreamList()"></select>
+      <div class="ms-filter">
+        <button class="ms-btn" id="idiomaBtn" onclick="toggleMsPanel('idioma')">Idioma: todos</button>
+        <div class="ms-panel" id="idiomaPanel"></div>
+      </div>
+      <div class="ms-filter">
+        <button class="ms-btn" id="qualidadeBtn" onclick="toggleMsPanel('qualidade')">Qualidade: todas</button>
+        <div class="ms-panel" id="qualidadePanel"></div>
+      </div>
       <button class="icon-toggle" id="filtroCacheBtn" onclick="toggleCache()" title="Só em cache">⚡</button>
     </div>
     <div class="stream-list" id="streamList"></div>
@@ -543,44 +561,83 @@ function idiomaDisplay(idioma){
   return [...map.values()].sort().join(' · ');
 }
 
+let selecaoIdioma = new Set();
+let selecaoQualidade = new Set();
+
+function toggleMsPanel(qual){
+  const painel = document.getElementById(qual === 'idioma' ? 'idiomaPanel' : 'qualidadePanel');
+  const outro = document.getElementById(qual === 'idioma' ? 'qualidadePanel' : 'idiomaPanel');
+  outro.classList.remove('open');
+  painel.classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.ms-filter')) {
+    document.querySelectorAll('.ms-panel.open').forEach(p => p.classList.remove('open'));
+  }
+});
+
 function montarFiltros(){
   const dados = window.__streamsMeta || [];
-  const idiomaSel = document.getElementById('filtroIdioma');
-  const qualSel = document.getElementById('filtroQualidade');
-  const idiomaAtual = idiomaSel.value;
-  const qualAtual = qualSel.value;
+  selecaoIdioma = new Set();
+  selecaoQualidade = new Set();
 
   const todosTokens = dados.flatMap(d => idiomaTokens(d.meta.idioma));
   const idiomaMap = new Map();
   todosTokens.forEach(t => { const k = t.toLowerCase(); if (!idiomaMap.has(k)) idiomaMap.set(k, t); });
   const idiomas = [...idiomaMap.values()].sort();
   const temSemIdioma = dados.some(d => !d.meta.idioma);
-  idiomaSel.innerHTML = '<option value="">Idioma: todos</option>' +
-    idiomas.map(i => `<option value="${i}">${i}</option>`).join('') +
-    (temSemIdioma ? '<option value="__none__">Sem idioma informado</option>' : '');
+
+  const idiomaPanel = document.getElementById('idiomaPanel');
+  idiomaPanel.innerHTML = idiomas.map(i => `
+    <label class="ms-option"><input type="checkbox" value="${i}" onchange="onFiltroChange('idioma', this)"> ${i}</label>
+  `).join('') + (temSemIdioma ? `
+    <label class="ms-option"><input type="checkbox" value="__none__" onchange="onFiltroChange('idioma', this)"> Sem idioma informado</label>
+  ` : '');
 
   const ordem = ['4K','1080p','720p','SD','Outros'];
   const quals = ordem.filter(q => dados.some(d => d.quality === q));
-  qualSel.innerHTML = '<option value="">Qualidade: todas</option>' +
-    quals.map(q => `<option value="${q}">${q}</option>`).join('');
+  const qualPanel = document.getElementById('qualidadePanel');
+  qualPanel.innerHTML = quals.map(q => `
+    <label class="ms-option"><input type="checkbox" value="${q}" onchange="onFiltroChange('qualidade', this)"> ${q}</label>
+  `).join('');
 
-  if ([...idiomaSel.options].some(o => o.value === idiomaAtual)) idiomaSel.value = idiomaAtual;
-  if ([...qualSel.options].some(o => o.value === qualAtual)) qualSel.value = qualAtual;
-
+  atualizarBotoesFiltro();
   document.getElementById('filterRow').style.display = dados.length ? 'flex' : 'none';
+}
+
+function onFiltroChange(qual, input){
+  const set = qual === 'idioma' ? selecaoIdioma : selecaoQualidade;
+  if (input.checked) set.add(input.value); else set.delete(input.value);
+  atualizarBotoesFiltro();
+  renderStreamList();
+}
+
+function atualizarBotoesFiltro(){
+  const idiomaBtn = document.getElementById('idiomaBtn');
+  const qualBtn = document.getElementById('qualidadeBtn');
+  idiomaBtn.textContent = selecaoIdioma.size ? `Idioma (${selecaoIdioma.size})` : 'Idioma: todos';
+  idiomaBtn.classList.toggle('active', selecaoIdioma.size > 0);
+  qualBtn.textContent = selecaoQualidade.size ? `Qualidade (${selecaoQualidade.size})` : 'Qualidade: todas';
+  qualBtn.classList.toggle('active', selecaoQualidade.size > 0);
 }
 
 function renderStreamList(){
   const list = document.getElementById('streamList');
   const dados = window.__streamsMeta || [];
-  const filtroIdioma = document.getElementById('filtroIdioma').value;
-  const filtroQualidade = document.getElementById('filtroQualidade').value;
 
   const filtrados = dados.filter(d => {
     if (somenteCache && !d.meta.cached) return false;
-    if (filtroQualidade && d.quality !== filtroQualidade) return false;
-    if (filtroIdioma === '__none__' && d.meta.idioma) return false;
-    if (filtroIdioma && filtroIdioma !== '__none__' && !idiomaTokens(d.meta.idioma).some(t => t.toLowerCase() === filtroIdioma.toLowerCase())) return false;
+    if (selecaoQualidade.size && !selecaoQualidade.has(d.quality)) return false;
+    if (selecaoIdioma.size) {
+      const semIdioma = !d.meta.idioma;
+      if (semIdioma) {
+        if (!selecaoIdioma.has('__none__')) return false;
+      } else {
+        const tokens = idiomaTokens(d.meta.idioma).map(t => t.toLowerCase());
+        const bate = [...selecaoIdioma].some(sel => sel !== '__none__' && tokens.includes(sel.toLowerCase()));
+        if (!bate) return false;
+      }
+    }
     return true;
   });
 
